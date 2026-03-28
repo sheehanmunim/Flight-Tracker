@@ -49,6 +49,22 @@ function Get-RecentLogTail {
     return (Get-Content -LiteralPath $LogPath -Tail $Lines | Out-String).Trim()
 }
 
+function Write-PortStatus {
+    param(
+        [Parameter(Mandatory)]
+        [int]$Port,
+        [Parameter(Mandatory)]
+        [string]$Label
+    )
+
+    $listener = Get-PortListener -Port $Port
+    if ($listener) {
+        Write-Host ("{0,-15}: listening on tcp://127.0.0.1:{1}" -f $Label, $Port) -ForegroundColor Green
+    } else {
+        Write-Host ("{0,-15}: not listening on port {1}" -f $Label, $Port) -ForegroundColor Yellow
+    }
+}
+
 $paths = Get-TrackerPaths
 $tracker = Get-TrackerProcess -ExecutablePath $paths.Dump1090 | Select-Object -First 1
 $listener = Get-PortListener -Port 8080
@@ -64,6 +80,15 @@ if ($listener) {
 } else {
     Write-Host "Web server      : not listening on port 8080" -ForegroundColor Yellow
 }
+
+Write-Host ""
+Write-Host "Feed outputs:"
+Write-PortStatus -Port 30002 -Label "AVR/raw"
+Write-PortStatus -Port 30003 -Label "SBS"
+Write-Host "Beast          : not provided by this Windows dump1090 build" -ForegroundColor Yellow
+Write-Host "FR24           : can use AVR on tcp://127.0.0.1:30002"
+Write-Host "FlightAware    : needs Beast-format TCP from another decoder host"
+Write-Host "airplanes.live : official feeder expects a Beast source, typically tcp://127.0.0.1:30005"
 
 if ($tracker) {
     Write-Host "USB device      : skipped because the tracker already has the SDR open"

@@ -6,7 +6,8 @@ This project is now intentionally narrow:
 - run one start command
 - see nearby planes on a local web page
 
-It does not try to set up feeder services, Raspberry Pi workflows, or cloud accounts.
+It can also expose local network outputs from `dump1090`, but it is still not a full
+multi-feeder Linux stack.
 
 ## Start
 
@@ -23,6 +24,56 @@ To check what Windows sees, run `Status-LocalFlightTracker.cmd`.
 - `vendor/Dump1090/dump1090.exe` for decoding ADS-B
 - Tar1090 for the local aircraft map
 - a small PowerShell wrapper for Windows startup checks
+
+## Feed Outputs
+
+When the tracker is running, this Windows setup exposes:
+
+- `http://localhost:8080` for the local Tar1090 map
+- `127.0.0.1:30002` for AVR/raw TCP output
+- `127.0.0.1:30003` for SBS/BaseStation TCP output
+
+This bundled Windows `dump1090` build does not expose Beast TCP on `30005`.
+
+## Feeding Other Networks
+
+`Flightradar24`
+
+- This is the one that can use the current Windows output directly.
+- Their support docs say `receiver="avr-tcp"` with `host="127.0.0.1:30002"` is valid, or
+  `receiver="beast-tcp"` with `host="127.0.0.1:30005"` if you have a Beast source.
+
+`FlightAware`
+
+- PiAware's advanced configuration says external receivers must provide Beast binary
+  format over TCP for `receiver-type "relay"` or `receiver-type "other"`.
+- Because this Windows project does not provide Beast on `30005`, it is not enough on
+  its own for a direct FlightAware feed.
+
+`airplanes.live`
+
+- The official feed scripts say a decoder such as `readsb` must already be installed.
+- Their setup defaults to `INPUT="127.0.0.1:30005"`, which is again a Beast source.
+
+## Recommended Path For All Three
+
+If your goal is to feed `FlightAware`, `airplanes.live`, and `Flightradar24` together,
+use a Raspberry Pi or Debian/Ubuntu box as the always-on feeder host and run a
+Beast-capable decoder there, typically `readsb` or `dump1090-fa`.
+
+Use this Windows repo for:
+
+- verifying the dongle works
+- viewing a local map
+- optionally feeding `Flightradar24` from `127.0.0.1:30002`
+
+Move to a Linux feeder host for:
+
+- `FlightAware` via PiAware
+- `airplanes.live` via their official feed scripts
+- `Flightradar24` alongside the other two from the same Beast source
+
+For a concrete bridge layout and example configs, see `feeders/README.md`.
 
 ## Troubleshooting
 
@@ -53,4 +104,4 @@ To check what Windows sees, run `Status-LocalFlightTracker.cmd`.
 - `Stop-LocalFlightTracker.cmd`: stops the local tracker
 - `Status-LocalFlightTracker.cmd`: prints hardware and web status
 - `dump1090-local.cfg`: local config overrides
-
+- `feeders/README.md`: optional bridge guide for FlightAware, airplanes.live, and Flightradar24

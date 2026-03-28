@@ -213,3 +213,5 @@ if (-not $NoBrowser) {
 }
 
 Write-Host "Flight tracker is running at $($paths.Url)." -ForegroundColor Green
+Write-Host "Feed outputs: AVR/raw on tcp://127.0.0.1:30002 and SBS on tcp://127.0.0.1:30003."
+Write-Host "Beast tcp://127.0.0.1:30005 is not available from this Windows dump1090 build."

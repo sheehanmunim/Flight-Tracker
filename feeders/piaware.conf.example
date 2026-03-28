@@ -1,0 +1,9 @@
+# PiAware package-install example for a bridged external receiver.
+#
+# This assumes readsb is already running in the same Linux sidecar and
+# exposing Beast output on 127.0.0.1:30005.
+
+receiver-type other
+receiver-host 127.0.0.1
+receiver-port 30005
+allow-mlat yes

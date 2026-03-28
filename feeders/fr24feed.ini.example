@@ -1,0 +1,10 @@
+# FR24 example for using the readsb Beast bridge.
+#
+# Fill in your own sharing key and antenna details before enabling.
+
+receiver="beast-tcp"
+host="127.0.0.1:30005"
+fr24key="YOUR_FR24_SHARING_KEY"
+bs="no"
+raw="no"
+mlat="yes"
