@@ -1,0 +1,6 @@
+logs/beast-bridge.log
+logs/beast-bridge.pid
+scripts/__pycache__/
+*.pyc
+ui/**/bin/
+ui/**/obj/

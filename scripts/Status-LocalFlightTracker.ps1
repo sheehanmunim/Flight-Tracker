@@ -10,6 +10,8 @@ function Get-TrackerPaths {
         Root = $root
         Dump1090 = Join-Path $root "vendor\Dump1090\dump1090.exe"
         LogFile = Join-Path $root "logs\dump1090.log"
+        BeastBridgeLog = Join-Path $root "logs\beast-bridge.log"
+        BeastBridgePid = Join-Path $root "logs\beast-bridge.pid"
         RtlTest = Join-Path $root "vendor\rtl-sdr-tools\rtl-sdr-64bit-20260322\rtl_test.exe"
         Url = "http://localhost:8080"
     }
@@ -23,6 +25,24 @@ function Get-TrackerProcess {
 
     Get-CimInstance Win32_Process -Filter "Name = 'dump1090.exe'" -ErrorAction SilentlyContinue |
         Where-Object { $_.ExecutablePath -eq $ExecutablePath }
+}
+
+function Get-BridgeProcess {
+    param(
+        [Parameter(Mandatory)]
+        [string]$PidFile
+    )
+
+    if (-not (Test-Path -LiteralPath $PidFile)) {
+        return $null
+    }
+
+    $pidText = (Get-Content -LiteralPath $PidFile -ErrorAction SilentlyContinue | Select-Object -First 1).Trim()
+    if (-not $pidText -or $pidText -notmatch '^\d+$') {
+        return $null
+    }
+
+    return Get-CimInstance Win32_Process -Filter "ProcessId = $pidText" -ErrorAction SilentlyContinue
 }
 
 function Get-PortListener {
@@ -67,12 +87,19 @@ function Write-PortStatus {
 
 $paths = Get-TrackerPaths
 $tracker = Get-TrackerProcess -ExecutablePath $paths.Dump1090 | Select-Object -First 1
+$bridge = Get-BridgeProcess -PidFile $paths.BeastBridgePid | Select-Object -First 1
 $listener = Get-PortListener -Port 8080
 
 if ($tracker) {
     Write-Host "Tracker process : running (PID $($tracker.ProcessId))" -ForegroundColor Green
 } else {
     Write-Host "Tracker process : not running" -ForegroundColor Yellow
+}
+
+if ($bridge) {
+    Write-Host "Beast bridge    : running (PID $($bridge.ProcessId))" -ForegroundColor Green
+} else {
+    Write-Host "Beast bridge    : not running" -ForegroundColor Yellow
 }
 
 if ($listener) {
@@ -85,10 +112,10 @@ Write-Host ""
 Write-Host "Feed outputs:"
 Write-PortStatus -Port 30002 -Label "AVR/raw"
 Write-PortStatus -Port 30003 -Label "SBS"
-Write-Host "Beast          : not provided by this Windows dump1090 build" -ForegroundColor Yellow
+Write-PortStatus -Port 30005 -Label "Beast"
 Write-Host "FR24           : can use AVR on tcp://127.0.0.1:30002"
-Write-Host "FlightAware    : needs Beast-format TCP from another decoder host"
-Write-Host "airplanes.live : official feeder expects a Beast source, typically tcp://127.0.0.1:30005"
+Write-Host "FlightAware    : can use Beast on tcp://127.0.0.1:30005, but synthetic timestamps mean MLAT should stay off"
+Write-Host "airplanes.live : can use Beast on tcp://127.0.0.1:30005, but synthetic timestamps mean MLAT should stay off"
 
 if ($tracker) {
     Write-Host "USB device      : skipped because the tracker already has the SDR open"
@@ -115,4 +142,11 @@ if ($logTail) {
     Write-Host ""
     Write-Host "Recent log output:"
     Write-Host $logTail
+}
+
+$bridgeLogTail = Get-RecentLogTail -LogPath $paths.BeastBridgeLog
+if ($bridgeLogTail) {
+    Write-Host ""
+    Write-Host "Recent Beast bridge log output:"
+    Write-Host $bridgeLogTail
 }

@@ -12,8 +12,9 @@ multi-feeder Linux stack.
 ## Start
 
 1. Plug in your RTL-SDR dongle and antenna.
-2. Double-click `Start-LocalFlightTracker.cmd`.
-3. If the browser does not open, go to `http://localhost:8080`.
+2. For the desktop app, double-click `FlightTrackerApp.cmd`.
+3. For the original script-only flow, double-click `Start-LocalFlightTracker.cmd`.
+4. If the browser does not open, go to `http://localhost:8080`.
 
 To stop it, run `Stop-LocalFlightTracker.cmd`.
 
@@ -24,6 +25,21 @@ To check what Windows sees, run `Status-LocalFlightTracker.cmd`.
 - `vendor/Dump1090/dump1090.exe` for decoding ADS-B
 - Tar1090 for the local aircraft map
 - a small PowerShell wrapper for Windows startup checks
+- a small WinForms launcher app for one-click control on Windows
+
+## Windows App
+
+`FlightTrackerApp.cmd` builds and launches a small Windows desktop app that can:
+
+- start the tracker
+- stop the tracker
+- refresh status
+- open the local map
+- open the feeder guide
+- open logs
+
+If the .NET 8 SDK is not already available, the launcher installs it to
+`%USERPROFILE%\.dotnet` using Microsoft's official `dotnet-install.ps1` script.
 
 ## Feed Outputs
 
@@ -32,8 +48,11 @@ When the tracker is running, this Windows setup exposes:
 - `http://localhost:8080` for the local Tar1090 map
 - `127.0.0.1:30002` for AVR/raw TCP output
 - `127.0.0.1:30003` for SBS/BaseStation TCP output
+- `127.0.0.1:30005` for a local Beast bridge fed from `30002`
 
-This bundled Windows `dump1090` build does not expose Beast TCP on `30005`.
+The Beast bridge uses synthetic 12 MHz timestamps generated on the Windows host.
+That is enough for software that requires Beast framing, but it should not be
+expected to produce useful MLAT results.
 
 ## Feeding Other Networks
 
@@ -47,13 +66,14 @@ This bundled Windows `dump1090` build does not expose Beast TCP on `30005`.
 
 - PiAware's advanced configuration says external receivers must provide Beast binary
   format over TCP for `receiver-type "relay"` or `receiver-type "other"`.
-- Because this Windows project does not provide Beast on `30005`, it is not enough on
-  its own for a direct FlightAware feed.
+- This project now provides a local Beast bridge on `127.0.0.1:30005`.
+- Keep `allow-mlat no` with this bridge, because the timestamps are synthetic.
 
 `airplanes.live`
 
 - The official feed scripts say a decoder such as `readsb` must already be installed.
-- Their setup defaults to `INPUT="127.0.0.1:30005"`, which is again a Beast source.
+- Their setup defaults to `INPUT="127.0.0.1:30005"`, which matches the local Beast bridge here.
+- Keep MLAT disabled with this bridge.
 
 ## Recommended Path For All Three
 
@@ -65,7 +85,8 @@ Use this Windows repo for:
 
 - verifying the dongle works
 - viewing a local map
-- optionally feeding `Flightradar24` from `127.0.0.1:30002`
+- feeding Beast-only clients from `127.0.0.1:30005`
+- optionally feeding `Flightradar24` from `127.0.0.1:30002` or `127.0.0.1:30005`
 
 Move to a Linux feeder host for:
 
@@ -74,6 +95,15 @@ Move to a Linux feeder host for:
 - `Flightradar24` alongside the other two from the same Beast source
 
 For a concrete bridge layout and example configs, see `feeders/README.md`.
+
+## Feeder Prerequisite Note
+
+The local Beast bridge is ready on Windows now.
+
+The remaining blocker for official `FlightAware` and `airplanes.live` feeder-daemon
+installation on this machine is WSL itself: if `wsl --status` reports that the WSL 2
+kernel is missing, repairing or installing the WSL package requires administrator
+privileges before Debian can be installed.
 
 ## Troubleshooting
 
@@ -100,6 +130,7 @@ For a concrete bridge layout and example configs, see `feeders/README.md`.
 
 ## Files
 
+- `FlightTrackerApp.cmd`: builds and launches the Windows desktop app
 - `Start-LocalFlightTracker.cmd`: starts the local tracker
 - `Stop-LocalFlightTracker.cmd`: stops the local tracker
 - `Status-LocalFlightTracker.cmd`: prints hardware and web status

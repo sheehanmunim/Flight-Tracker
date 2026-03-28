@@ -6,18 +6,35 @@ $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
 $dump1090Path = Join-Path $root "vendor\Dump1090\dump1090.exe"
+$beastBridgePid = Join-Path $root "logs\beast-bridge.pid"
 
-$targets = Get-CimInstance Win32_Process -Filter "Name = 'dump1090.exe'" -ErrorAction SilentlyContinue |
+$trackerTargets = Get-CimInstance Win32_Process -Filter "Name = 'dump1090.exe'" -ErrorAction SilentlyContinue |
     Where-Object { $_.ExecutablePath -eq $dump1090Path }
 
-if (-not $targets) {
+$bridgeTargets = @()
+if (Test-Path -LiteralPath $beastBridgePid) {
+    $pidText = (Get-Content -LiteralPath $beastBridgePid -ErrorAction SilentlyContinue | Select-Object -First 1).Trim()
+    if ($pidText -match '^\d+$') {
+        $bridgeTarget = Get-CimInstance Win32_Process -Filter "ProcessId = $pidText" -ErrorAction SilentlyContinue
+        if ($bridgeTarget) {
+            $bridgeTargets = @($bridgeTarget)
+        }
+    }
+}
+
+if (-not $trackerTargets -and -not $bridgeTargets) {
     Write-Host "Flight tracker is not running."
     return
 }
 
-foreach ($target in $targets) {
+foreach ($target in $bridgeTargets) {
     Stop-Process -Id $target.ProcessId -Force
 }
 
-Write-Host "Flight tracker stopped."
+foreach ($target in $trackerTargets) {
+    Stop-Process -Id $target.ProcessId -Force
+}
 
+Remove-Item -LiteralPath $beastBridgePid -Force -ErrorAction SilentlyContinue
+
+Write-Host "Flight tracker stopped."
