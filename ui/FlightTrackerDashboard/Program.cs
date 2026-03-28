@@ -38,12 +38,14 @@ app.MapGet("/api/meta", (HttpRequest request) =>
 {
     var host = request.Host.Host;
     var mapUrl = $"http://{host}:8080";
+    var lanUrl = $"http://{host}:5099/?key={dashboardKey}";
 
     return Results.Json(new
     {
         hostOs = Environment.OSVersion.ToString(),
         repoRoot,
         mapUrl,
+        lanUrl,
         usbNote = "The browser can control the host, but the RTL-SDR still has to be attached to the host OS running the decoder.",
         beastNote = "The local Beast bridge uses synthetic timestamps. Keep MLAT disabled."
     });

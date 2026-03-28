@@ -7,6 +7,7 @@ set "USER_DOTNET=%USERPROFILE%\.dotnet\dotnet.exe"
 set "DOTNET_EXE="
 set "PORT=5099"
 set "KEY_FILE=%ROOT%logs\dashboard.key"
+set "MAC_URL_FILE=%ROOT%macOS\flight-tracker-url.txt"
 
 if exist "%USER_DOTNET%" (
   set "DOTNET_EXE=%USER_DOTNET%"
@@ -47,5 +48,17 @@ exit /b 1
 
 :key_ready
 set /p DASHBOARD_KEY=<"%KEY_FILE%"
+
+for /f "usebackq delims=" %%A in (`powershell -ExecutionPolicy Bypass -Command "$ip = Get-NetIPAddress -AddressFamily IPv4 -PrefixOrigin Dhcp,Manual -ErrorAction SilentlyContinue ^| Where-Object { $_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.254.*' } ^| Select-Object -First 1 -ExpandProperty IPAddress; if (-not $ip) { $ip = 'localhost' }; Write-Output $ip"`) do set "HOST_IP=%%A"
+
+if not exist "%ROOT%macOS" mkdir "%ROOT%macOS"
+> "%MAC_URL_FILE%" echo http://%HOST_IP%:%PORT%/?key=%DASHBOARD_KEY%
+
+echo.
+echo Flight Tracker dashboard URL:
+echo http://localhost:%PORT%/?key=%DASHBOARD_KEY%
+echo.
+echo Share this LAN URL with a Mac or another device:
+echo http://%HOST_IP%:%PORT%/?key=%DASHBOARD_KEY%
 
 start "" "http://localhost:%PORT%/?key=%DASHBOARD_KEY%"

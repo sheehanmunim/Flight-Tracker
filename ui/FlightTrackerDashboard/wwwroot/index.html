@@ -224,6 +224,12 @@
           <button class="secondary" id="saveKeyBtn">Save</button>
         </div>
 
+        <div class="small" style="margin-top: 14px;">Share URL</div>
+        <div class="key-box">
+          <input id="shareUrlInput" type="text" readonly placeholder="Refresh metadata to populate the share URL">
+          <button class="secondary" id="copyShareBtn">Copy</button>
+        </div>
+
         <div class="meta-list">
           <div class="meta-item">
             <div class="meta-label">Map</div>
@@ -265,6 +271,8 @@
     const mapLink = document.getElementById("mapLink");
     const mapLinkTop = document.getElementById("mapLinkTop");
     const usbNote = document.getElementById("usbNote");
+    const shareUrlInput = document.getElementById("shareUrlInput");
+    const copyShareBtn = document.getElementById("copyShareBtn");
 
     const params = new URLSearchParams(window.location.search);
     const storedKey = window.localStorage.getItem("flight-tracker-dashboard-key") || "";
@@ -283,6 +291,21 @@
       refreshStatus();
     });
 
+    copyShareBtn.addEventListener("click", async () => {
+      const value = shareUrlInput.value.trim();
+      if (!value) {
+        render("Refresh metadata first so the share URL is available.");
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(value);
+        render("Copied the share URL to the clipboard.");
+      } catch {
+        render("Unable to copy automatically. Copy the share URL manually.");
+      }
+    });
+
     document.getElementById("startBtn").addEventListener("click", () => callApi("/api/start", "POST"));
     document.getElementById("stopBtn").addEventListener("click", () => callApi("/api/stop", "POST"));
     document.getElementById("statusBtn").addEventListener("click", () => refreshStatus());
@@ -292,10 +315,11 @@
 
     async function bootstrap() {
       try {
-        const meta = await fetchJson("/api/meta", { includeKey: false });
+        const meta = await fetchJson("/api/meta", { includeKey: true });
         usbNote.textContent = meta.usbNote;
+        shareUrlInput.value = meta.lanUrl || "";
       } catch {
-        usbNote.textContent = "Unable to load dashboard metadata.";
+        usbNote.textContent = "Unable to load dashboard metadata. Save the access key first if needed.";
       }
 
       await refreshStatus();

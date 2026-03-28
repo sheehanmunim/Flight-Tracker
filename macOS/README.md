@@ -5,8 +5,8 @@
 ## Setup
 
 1. Start the dashboard on the Windows host with `FlightTrackerWeb.cmd`.
-2. Copy the full dashboard URL, including the `?key=...` query string.
-3. Put that URL into `macOS/flight-tracker-url.txt`.
+2. The Windows launcher automatically writes a shareable URL to `macOS/flight-tracker-url.txt`.
+3. If needed, replace that URL with the correct Windows host IP and the same `?key=...` value.
 4. Double-click `FlightTrackerMac.command` on the Mac.
 
 ## Important Note

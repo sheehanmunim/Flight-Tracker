@@ -5,3 +5,4 @@ scripts/__pycache__/
 *.pyc
 ui/**/bin/
 ui/**/obj/
+macOS/flight-tracker-url.txt
