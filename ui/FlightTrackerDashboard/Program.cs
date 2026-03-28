@@ -69,6 +69,13 @@ app.MapDelete("/api/feeders/{id}", (string id, HttpRequest request) =>
     return Results.Json(FeederApi.BuildResponse(repoRoot, request.Host.Host));
 });
 
+app.MapPost("/api/feeders/{id}/install", async (string id) =>
+{
+    var installScript = Path.Combine(repoRoot, "scripts", "Install-Feeder.ps1");
+    var result = await ScriptRunner.RunPowerShellScriptAsync(repoRoot, installScript, $"-Provider {id}");
+    return Results.Json(result);
+});
+
 app.MapGet("/api/status", async () =>
 {
     var result = await ScriptRunner.RunPowerShellScriptAsync(repoRoot, Path.Combine(repoRoot, "scripts", "Status-LocalFlightTracker.ps1"));

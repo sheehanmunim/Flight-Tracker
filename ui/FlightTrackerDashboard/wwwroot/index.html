@@ -549,6 +549,10 @@
 
       feedersGrid.innerHTML = selected.map(provider => renderProvider(provider)).join("");
 
+      feedersGrid.querySelectorAll("[data-action='install']").forEach(button => {
+        button.addEventListener("click", () => installProvider(button.dataset.providerId));
+      });
+
       feedersGrid.querySelectorAll("[data-action='copy-local']").forEach(button => {
         button.addEventListener("click", () => copyProvider(button.dataset.providerId, "local"));
       });
@@ -590,6 +594,7 @@
           <ul class="feeder-notes">${provider.notes.map(note => `<li>${escapeHtml(note)}</li>`).join("")}</ul>
 
           <div class="feeder-actions">
+            <button class="primary" data-action="install" data-provider-id="${escapeAttribute(provider.id)}">Install Automatically</button>
             <button class="secondary" data-action="copy-local" data-provider-id="${escapeAttribute(provider.id)}">Copy Same-Host Setup</button>
             <button class="secondary" data-action="copy-lan" data-provider-id="${escapeAttribute(provider.id)}">Copy LAN Setup</button>
             <button class="ghost-button" data-action="remove" data-provider-id="${escapeAttribute(provider.id)}">Remove</button>
@@ -624,6 +629,18 @@
       ];
 
       await copyText(lines.join("\n"), `Copied ${provider.name} ${mode === "lan" ? "LAN" : "same-host"} setup.`);
+    }
+
+    async function installProvider(providerId) {
+      const provider = findProvider(providerId);
+      render(`Installing ${provider?.name || "feeder"}...`);
+
+      try {
+        const payload = await fetchJson(`/api/feeders/${encodeURIComponent(providerId)}/install`, { method: "POST", includeKey: true });
+        render(formatPayload(payload));
+      } catch (error) {
+        render(error.message);
+      }
     }
 
     async function removeProvider(providerId) {

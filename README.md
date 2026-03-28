@@ -35,6 +35,7 @@ If the map does not open, go to `http://localhost:8080`.
 - stop the tracker
 - refresh status
 - add feeder profiles for FlightAware, Flightradar24, and airplanes.live
+- run an automatic feeder installer from the app
 - open the local map
 - open the feeder guide
 - open logs
@@ -52,6 +53,7 @@ The dashboard can:
 - stop the tracker
 - refresh tracker status
 - add feeder profiles from an `Add Feeder To` dropdown
+- run an `Install Automatically` action on saved feeder cards
 - run the host check
 - show recent dump1090 and Beast bridge logs
 - open the map on the same host
@@ -74,6 +76,16 @@ decoder. The browser controls that host, but it does not replace the host OS USB
 
 It is a lightweight launcher for the hosted dashboard, not a native macOS SDR decoder. See `macOS/README.md` for setup.
 Because the Mac client opens the same dashboard, it includes the same `Add Feeder To` UI as the browser host view.
+
+## Automatic Feeder Install
+
+Each saved feeder card now includes an `Install Automatically` action. On Windows, that installer:
+
+- makes sure the local tracker feed is running first
+- tries to use WSL + Debian as the Linux host for the official feeder packages
+- applies the local feed settings automatically for FlightAware, Flightradar24, and airplanes.live
+
+On this PC, the current blocker is still WSL provisioning itself. If Debian is not fully installed yet, the installer now surfaces that directly inside the app/dashboard instead of sending the user to separate docs first.
 
 ## Feed Outputs
 

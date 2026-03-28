@@ -49,7 +49,7 @@ exit /b 1
 :key_ready
 set /p DASHBOARD_KEY=<"%KEY_FILE%"
 
-for /f "usebackq delims=" %%A in (`powershell -ExecutionPolicy Bypass -Command "$ip = Get-NetIPAddress -AddressFamily IPv4 -PrefixOrigin Dhcp,Manual -ErrorAction SilentlyContinue ^| Where-Object { $_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.254.*' } ^| Select-Object -First 1 -ExpandProperty IPAddress; if (-not $ip) { $ip = 'localhost' }; Write-Output $ip"`) do set "HOST_IP=%%A"
+for /f "usebackq delims=" %%A in (`powershell -ExecutionPolicy Bypass -Command "$ip = Get-NetIPAddress -AddressFamily IPv4 -PrefixOrigin Dhcp,Manual -ErrorAction SilentlyContinue | Where-Object { $_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.254.*' } | Select-Object -First 1 -ExpandProperty IPAddress; if ($ip) { Write-Output $ip } else { Write-Output 'localhost' }"`) do set "HOST_IP=%%A"
 
 if not exist "%ROOT%macOS" mkdir "%ROOT%macOS"
 > "%MAC_URL_FILE%" echo http://%HOST_IP%:%PORT%/?key=%DASHBOARD_KEY%
