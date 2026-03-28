@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text;
+using FlightTracker.Shared;
 
 namespace FlightTrackerLauncher;
 
@@ -15,6 +16,11 @@ internal static class Program
 
 internal sealed class MainForm : Form
 {
+    private sealed record FeederChoice(string Id, string Name)
+    {
+        public override string ToString() => Name;
+    }
+
     private readonly string _repoRoot;
     private readonly string _startScript;
     private readonly string _statusScript;
@@ -31,7 +37,15 @@ internal sealed class MainForm : Form
     private readonly Button _openWebButton;
     private readonly Button _openGuideButton;
     private readonly Button _openLogsButton;
+    private readonly Button _addFeederButton;
+    private readonly Button _removeFeederButton;
+    private readonly Button _copyLocalFeederButton;
+    private readonly Button _copyLanFeederButton;
     private readonly Label _summaryLabel;
+    private readonly Label _feederHostLabel;
+    private readonly ComboBox _feederComboBox;
+    private readonly ListBox _feederListBox;
+    private readonly TextBox _feederDetailsBox;
 
     public MainForm()
     {
@@ -44,7 +58,7 @@ internal sealed class MainForm : Form
         _logFile = Path.Combine(_repoRoot, "logs", "dump1090.log");
 
         Text = "Flight Tracker Launcher";
-        MinimumSize = new Size(860, 620);
+        MinimumSize = new Size(980, 760);
         StartPosition = FormStartPosition.CenterScreen;
         Font = new Font("Segoe UI", 10);
 
@@ -79,6 +93,10 @@ internal sealed class MainForm : Form
         _openWebButton = CreateButton("Launch Web Dashboard", (_, _) => OpenExternal(_webLauncher));
         _openGuideButton = CreateButton("Open Feed Guide", (_, _) => OpenExternal(_feedersGuide));
         _openLogsButton = CreateButton("Open Logs", (_, _) => OpenExternal(_logFile));
+        _addFeederButton = CreateButton("Add Feeder", (_, _) => AddSelectedFeeder());
+        _removeFeederButton = CreateButton("Remove Feeder", (_, _) => RemoveSelectedFeeder());
+        _copyLocalFeederButton = CreateButton("Copy Same-Host Setup", (_, _) => CopySelectedFeederSettings(useLanSettings: false));
+        _copyLanFeederButton = CreateButton("Copy LAN Setup", (_, _) => CopySelectedFeederSettings(useLanSettings: true));
 
         var buttonRow = new FlowLayoutPanel
         {
@@ -98,6 +116,94 @@ internal sealed class MainForm : Form
             _openGuideButton,
             _openLogsButton
         ]);
+
+        _feederHostLabel = new Label
+        {
+            AutoSize = true,
+            Font = new Font("Segoe UI", 9),
+            Text = $"LAN host: {FeederProfiles.GetLanHost()}",
+            Margin = new Padding(0, 4, 0, 10)
+        };
+
+        _feederComboBox = new ComboBox
+        {
+            DropDownStyle = ComboBoxStyle.DropDownList,
+            Width = 280
+        };
+
+        _feederListBox = new ListBox
+        {
+            Dock = DockStyle.Fill,
+            IntegralHeight = false
+        };
+        _feederListBox.SelectedIndexChanged += (_, _) => RefreshFeederDetails();
+
+        _feederDetailsBox = new TextBox
+        {
+            Dock = DockStyle.Fill,
+            Multiline = true,
+            ScrollBars = ScrollBars.Vertical,
+            ReadOnly = true,
+            Font = new Font("Consolas", 10),
+            BackColor = Color.White,
+            BorderStyle = BorderStyle.FixedSingle
+        };
+
+        var feederToolbar = new FlowLayoutPanel
+        {
+            AutoSize = true,
+            WrapContents = true,
+            Dock = DockStyle.Top,
+            Margin = new Padding(0, 0, 0, 10)
+        };
+        feederToolbar.Controls.Add(_feederComboBox);
+        feederToolbar.Controls.Add(_addFeederButton);
+        feederToolbar.Controls.Add(_removeFeederButton);
+        feederToolbar.Controls.Add(_copyLocalFeederButton);
+        feederToolbar.Controls.Add(_copyLanFeederButton);
+
+        var feederSplit = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 2,
+            RowCount = 1
+        };
+        feederSplit.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 240));
+        feederSplit.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        feederSplit.Controls.Add(_feederListBox, 0, 0);
+        feederSplit.Controls.Add(_feederDetailsBox, 1, 0);
+
+        var feederPanel = new TableLayoutPanel
+        {
+            Dock = DockStyle.Top,
+            ColumnCount = 1,
+            RowCount = 5,
+            AutoSize = true,
+            Margin = new Padding(0, 0, 0, 14)
+        };
+        feederPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        feederPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        feederPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        feederPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        feederPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 220));
+
+        feederPanel.Controls.Add(new Label
+        {
+            AutoSize = true,
+            Font = new Font("Segoe UI Semibold", 11, FontStyle.Bold),
+            Text = "Add Feeder To",
+            Margin = new Padding(0, 0, 0, 4)
+        }, 0, 0);
+        feederPanel.Controls.Add(new Label
+        {
+            AutoSize = true,
+            Font = new Font("Segoe UI", 9),
+            Text = "Pick a network once and this host keeps its feeder profile ready for the app and the dashboard.",
+            Margin = new Padding(0, 0, 0, 2)
+        }, 0, 1);
+        feederPanel.Controls.Add(_feederHostLabel, 0, 2);
+        feederPanel.Controls.Add(feederToolbar, 0, 3);
+        feederPanel.Controls.Add(feederSplit, 0, 4);
 
         _statusBox = new TextBox
         {
@@ -122,10 +228,11 @@ internal sealed class MainForm : Form
         {
             Dock = DockStyle.Fill,
             ColumnCount = 1,
-            RowCount = 6,
+            RowCount = 7,
             Padding = new Padding(18)
         };
 
+        mainPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         mainPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         mainPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         mainPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -137,12 +244,17 @@ internal sealed class MainForm : Form
         mainPanel.Controls.Add(subheader, 0, 1);
         mainPanel.Controls.Add(_summaryLabel, 0, 2);
         mainPanel.Controls.Add(buttonRow, 0, 3);
-        mainPanel.Controls.Add(_statusBox, 0, 4);
-        mainPanel.Controls.Add(noteLabel, 0, 5);
+        mainPanel.Controls.Add(feederPanel, 0, 4);
+        mainPanel.Controls.Add(_statusBox, 0, 5);
+        mainPanel.Controls.Add(noteLabel, 0, 6);
 
         Controls.Add(mainPanel);
 
-        Shown += async (_, _) => await RefreshStatusAsync();
+        Shown += async (_, _) =>
+        {
+            RefreshFeederUi();
+            await RefreshStatusAsync();
+        };
     }
 
     private static Button CreateButton(string text, EventHandler onClick)
@@ -262,6 +374,179 @@ internal sealed class MainForm : Form
         _openWebButton.Enabled = enabled;
         _openGuideButton.Enabled = enabled;
         _openLogsButton.Enabled = enabled;
+        _feederComboBox.Enabled = enabled;
+        _feederListBox.Enabled = enabled;
+        UpdateFeederButtons(enabled);
+    }
+
+    private void RefreshFeederUi()
+    {
+        var lanHost = FeederProfiles.GetLanHost();
+        _feederHostLabel.Text = $"LAN host: {lanHost}";
+
+        var catalog = FeederProfiles.GetCatalog(lanHost);
+        var selectedIds = FeederProfiles.LoadSelections(_repoRoot).SelectedIds
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var selectedProfiles = catalog.Where(profile => selectedIds.Contains(profile.Id)).ToArray();
+        var availableProfiles = catalog.Where(profile => !selectedIds.Contains(profile.Id)).ToArray();
+
+        _feederComboBox.BeginUpdate();
+        _feederComboBox.Items.Clear();
+        foreach (var provider in availableProfiles)
+        {
+            _feederComboBox.Items.Add(new FeederChoice(provider.Id, provider.Name));
+        }
+
+        if (_feederComboBox.Items.Count > 0)
+        {
+            _feederComboBox.SelectedIndex = 0;
+        }
+        _feederComboBox.EndUpdate();
+
+        _feederListBox.BeginUpdate();
+        _feederListBox.Items.Clear();
+        foreach (var provider in selectedProfiles)
+        {
+            _feederListBox.Items.Add(provider);
+        }
+        _feederListBox.DisplayMember = nameof(FeederProfile.Name);
+        if (_feederListBox.Items.Count > 0 && _feederListBox.SelectedIndex < 0)
+        {
+            _feederListBox.SelectedIndex = 0;
+        }
+        _feederListBox.EndUpdate();
+
+        if (_feederListBox.Items.Count == 0)
+        {
+            _feederDetailsBox.Text = "No feeder profiles added yet." + Environment.NewLine + Environment.NewLine
+                + "Pick a network above and click Add Feeder to save its host settings.";
+        }
+        else
+        {
+            RefreshFeederDetails();
+        }
+        UpdateFeederButtons(true);
+    }
+
+    private void RefreshFeederDetails()
+    {
+        if (_feederListBox.SelectedItem is not FeederProfile provider)
+        {
+            _feederDetailsBox.Text = "Select a feeder profile to see its settings.";
+            UpdateFeederButtons(true);
+            return;
+        }
+
+        _feederDetailsBox.Text = BuildFeederDetails(provider);
+        UpdateFeederButtons(true);
+    }
+
+    private void AddSelectedFeeder()
+    {
+        if (_feederComboBox.SelectedItem is not FeederChoice choice)
+        {
+            return;
+        }
+
+        FeederProfiles.AddSelection(_repoRoot, choice.Id);
+        RefreshFeederUi();
+    }
+
+    private void RemoveSelectedFeeder()
+    {
+        if (_feederListBox.SelectedItem is not FeederProfile provider)
+        {
+            return;
+        }
+
+        FeederProfiles.RemoveSelection(_repoRoot, provider.Id);
+        RefreshFeederUi();
+    }
+
+    private void CopySelectedFeederSettings(bool useLanSettings)
+    {
+        if (_feederListBox.SelectedItem is not FeederProfile provider)
+        {
+            return;
+        }
+
+        var text = BuildFeederCopyText(provider, useLanSettings);
+        try
+        {
+            Clipboard.SetText(text);
+            _statusBox.Text = $"{provider.Name} {(useLanSettings ? "LAN" : "same-host")} setup copied to the clipboard.";
+        }
+        catch (Exception ex)
+        {
+            _statusBox.Text = ex.Message;
+        }
+    }
+
+    private static string BuildFeederDetails(FeederProfile provider)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine(provider.Name);
+        builder.AppendLine(provider.Badge);
+        builder.AppendLine();
+        builder.AppendLine(provider.Summary);
+        builder.AppendLine();
+        builder.AppendLine(provider.InstallHint);
+        builder.AppendLine();
+        builder.AppendLine(provider.SourceLabel);
+        builder.AppendLine();
+        builder.AppendLine("Same host:");
+        foreach (var setting in provider.LocalSettings)
+        {
+            builder.AppendLine($"  {setting.Label}: {setting.Value}");
+        }
+
+        builder.AppendLine();
+        builder.AppendLine("From another device:");
+        foreach (var setting in provider.LanSettings)
+        {
+            builder.AppendLine($"  {setting.Label}: {setting.Value}");
+        }
+
+        builder.AppendLine();
+        builder.AppendLine("Notes:");
+        foreach (var note in provider.Notes)
+        {
+            builder.AppendLine($"  - {note}");
+        }
+
+        return builder.ToString().Trim();
+    }
+
+    private static string BuildFeederCopyText(FeederProfile provider, bool useLanSettings)
+    {
+        var settings = useLanSettings ? provider.LanSettings : provider.LocalSettings;
+        var builder = new StringBuilder();
+        builder.AppendLine(provider.Name);
+        builder.AppendLine();
+        builder.AppendLine(provider.Summary);
+        builder.AppendLine();
+        foreach (var setting in settings)
+        {
+            builder.AppendLine($"{setting.Label}: {setting.Value}");
+        }
+
+        builder.AppendLine();
+        foreach (var note in provider.Notes)
+        {
+            builder.AppendLine(note);
+        }
+
+        return builder.ToString().Trim();
+    }
+
+    private void UpdateFeederButtons(bool enabled)
+    {
+        _addFeederButton.Enabled = enabled && _feederComboBox.Items.Count > 0;
+        _removeFeederButton.Enabled = enabled && _feederListBox.SelectedItem is FeederProfile;
+        _copyLocalFeederButton.Enabled = enabled && _feederListBox.SelectedItem is FeederProfile;
+        _copyLanFeederButton.Enabled = enabled && _feederListBox.SelectedItem is FeederProfile;
     }
 
     private static string FindRepoRoot()

@@ -13,10 +13,14 @@
       --accent: #0f766e;
       --accent-2: #b45309;
       --line: rgba(31,43,36,0.12);
+      --line-strong: rgba(31,43,36,0.22);
       --shadow: 0 20px 60px rgba(25, 41, 34, 0.12);
+      --terminal: #14211c;
+      --terminal-ink: #d7f2e5;
     }
 
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: "Segoe UI", system-ui, sans-serif;
@@ -64,6 +68,7 @@
       display: grid;
       grid-template-columns: 360px 1fr;
       gap: 18px;
+      margin-bottom: 18px;
     }
 
     .panel {
@@ -74,7 +79,7 @@
       backdrop-filter: blur(16px);
     }
 
-    .controls, .status {
+    .controls, .status, .feeders {
       padding: 20px;
     }
 
@@ -90,23 +95,39 @@
       margin-bottom: 16px;
     }
 
-    button, .linkish {
+    button, select, .ghost-button {
       appearance: none;
       border: 0;
       border-radius: 14px;
       padding: 12px 14px;
       font: inherit;
-      font-weight: 700;
-      cursor: pointer;
       transition: transform 140ms ease, opacity 140ms ease, background 140ms ease;
     }
 
-    button:hover, .linkish:hover { transform: translateY(-1px); }
+    button, .ghost-button {
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover, .ghost-button:hover { transform: translateY(-1px); }
     button:disabled { opacity: 0.6; cursor: wait; transform: none; }
     .primary { background: var(--accent); color: white; }
     .secondary { background: #dbece8; color: var(--ink); }
     .warning { background: #f7e6cb; color: #7c3f00; }
     .danger { background: #f4d8d7; color: #7a2222; }
+    .ghost-button {
+      background: rgba(255,255,255,0.7);
+      border: 1px solid var(--line);
+      color: var(--ink);
+    }
+
+    select,
+    input[type="text"] {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.92);
+      color: var(--ink);
+    }
 
     .meta-list {
       display: grid;
@@ -114,14 +135,16 @@
       margin-top: 10px;
     }
 
-    .meta-item {
-      padding: 12px 14px;
-      border-radius: 14px;
-      background: rgba(255,255,255,0.75);
+    .meta-item,
+    .feeder-card {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.76);
       border: 1px solid var(--line);
     }
 
-    .meta-label {
+    .meta-label,
+    .eyebrow-mini {
       font-size: 12px;
       text-transform: uppercase;
       letter-spacing: 0.08em;
@@ -139,12 +162,15 @@
       line-height: 1.5;
     }
 
-    .status-head {
+    .status-head,
+    .feeders-head,
+    .feeder-topline,
+    .feeder-toolbar,
+    .field-row {
       display: flex;
       justify-content: space-between;
       gap: 12px;
       align-items: center;
-      margin-bottom: 12px;
       flex-wrap: wrap;
     }
 
@@ -155,8 +181,8 @@
     }
 
     .terminal {
-      background: #14211c;
-      color: #d7f2e5;
+      background: var(--terminal);
+      color: var(--terminal-ink);
       border-radius: 18px;
       padding: 16px;
       min-height: 440px;
@@ -173,23 +199,109 @@
       line-height: 1.5;
     }
 
-    .key-box {
+    .key-box,
+    .add-row {
       display: flex;
       gap: 8px;
       margin: 12px 0 0;
+      align-items: stretch;
+      flex-wrap: wrap;
     }
 
-    input[type="text"] {
-      width: 100%;
-      border-radius: 12px;
-      border: 1px solid var(--line);
+    .key-box input,
+    .add-row select {
+      flex: 1 1 240px;
+    }
+
+    .feeders-grid {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(15,118,110,0.12);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .feeder-title {
+      margin: 0;
+      font-size: 1.15rem;
+    }
+
+    .feeder-copy {
+      color: var(--muted);
+      line-height: 1.6;
+      margin: 10px 0 14px;
+    }
+
+    .feeder-columns {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .field-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .field-row {
       padding: 10px 12px;
-      font: inherit;
-      background: rgba(255,255,255,0.9);
+      border-radius: 12px;
+      background: rgba(247,244,236,0.88);
+      border: 1px solid rgba(31,43,36,0.08);
+      align-items: flex-start;
+    }
+
+    .field-label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .field-value {
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 13px;
+      text-align: right;
+      word-break: break-word;
+    }
+
+    .feeder-notes {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .feeder-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .empty-state {
+      padding: 20px;
+      border-radius: 16px;
+      border: 1px dashed var(--line-strong);
+      color: var(--muted);
+      background: rgba(255,255,255,0.45);
+      line-height: 1.6;
     }
 
     @media (max-width: 920px) {
-      .layout {
+      .layout,
+      .feeder-columns {
         grid-template-columns: 1fr;
       }
     }
@@ -199,9 +311,9 @@
   <div class="shell">
     <div class="hero">
       <div class="eyebrow">Flight Tracker Dashboard</div>
-      <h1>Control the host from a browser.</h1>
+      <h1>Control the host and add feeders from one place.</h1>
       <div class="lead">
-        Start, stop, inspect logs, and open the aircraft map from any browser that can reach this host.
+        Start, stop, inspect logs, open the aircraft map, and add network feeder profiles from any browser that can reach this host.
         The dashboard controls the machine running the SDR decoder. It does not directly claim the USB dongle inside the browser.
       </div>
     </div>
@@ -236,8 +348,8 @@
             <div><a id="mapLink" class="map-link" href="#" target="_blank" rel="noreferrer">Open local aircraft map</a></div>
           </div>
           <div class="meta-item">
-            <div class="meta-label">Beast</div>
-            <div>TCP `30005` for Beast-only feeders. Keep MLAT disabled.</div>
+            <div class="meta-label">Feed Outputs</div>
+            <div>AVR `30002`, SBS `30003`, Beast `30005`.</div>
           </div>
           <div class="meta-item">
             <div class="meta-label">USB</div>
@@ -262,6 +374,29 @@
         <div id="terminal" class="terminal">Loading...</div>
       </section>
     </div>
+
+    <section class="panel feeders">
+      <div class="feeders-head">
+        <div>
+          <h2 class="section-title" style="margin-bottom: 4px;">Add Feeder To</h2>
+          <div class="small">Choose a network once, then the host keeps the feeder profile ready across the browser dashboard and the Windows app.</div>
+        </div>
+        <div class="badge" id="lanHostBadge">Loading host...</div>
+      </div>
+
+      <div class="add-row">
+        <select id="providerSelect">
+          <option value="">Loading feeders...</option>
+        </select>
+        <button class="primary" id="addFeederBtn">Add Feeder</button>
+      </div>
+
+      <div class="small" style="margin-top: 12px;">
+        Adding a feeder here saves the provider profile on the host and shows the exact settings that belong to that network.
+      </div>
+
+      <div id="feedersGrid" class="feeders-grid"></div>
+    </section>
   </div>
 
   <script>
@@ -273,22 +408,27 @@
     const usbNote = document.getElementById("usbNote");
     const shareUrlInput = document.getElementById("shareUrlInput");
     const copyShareBtn = document.getElementById("copyShareBtn");
+    const providerSelect = document.getElementById("providerSelect");
+    const addFeederBtn = document.getElementById("addFeederBtn");
+    const feedersGrid = document.getElementById("feedersGrid");
+    const lanHostBadge = document.getElementById("lanHostBadge");
 
     const params = new URLSearchParams(window.location.search);
     const storedKey = window.localStorage.getItem("flight-tracker-dashboard-key") || "";
     const queryKey = params.get("key") || "";
     let dashboardKey = queryKey || storedKey;
+    let feederState = { providers: [], selectedIds: [] };
     keyInput.value = dashboardKey;
 
     const mapUrl = `${window.location.protocol}//${window.location.hostname}:8080`;
     mapLink.href = mapUrl;
     mapLinkTop.href = mapUrl;
 
-    saveKeyBtn.addEventListener("click", () => {
+    saveKeyBtn.addEventListener("click", async () => {
       dashboardKey = keyInput.value.trim();
       window.localStorage.setItem("flight-tracker-dashboard-key", dashboardKey);
       render("Saved key locally. Refreshing...");
-      refreshStatus();
+      await bootstrap();
     });
 
     copyShareBtn.addEventListener("click", async () => {
@@ -298,11 +438,24 @@
         return;
       }
 
+      await copyText(value, "Copied the share URL to the clipboard.");
+    });
+
+    addFeederBtn.addEventListener("click", async () => {
+      const providerId = providerSelect.value;
+      if (!providerId) {
+        render("Choose a feeder network from the dropdown first.");
+        return;
+      }
+
+      render("Adding feeder profile...");
+
       try {
-        await navigator.clipboard.writeText(value);
-        render("Copied the share URL to the clipboard.");
-      } catch {
-        render("Unable to copy automatically. Copy the share URL manually.");
+        feederState = await fetchJson(`/api/feeders/${encodeURIComponent(providerId)}`, { method: "POST", includeKey: true });
+        render(`Added ${findProvider(providerId)?.name || "feeder"}.\n\nThe host saved that provider profile and it is now available in this dashboard and the Windows app.`);
+        renderFeeders();
+      } catch (error) {
+        render(error.message);
       }
     });
 
@@ -322,8 +475,18 @@
         usbNote.textContent = "Unable to load dashboard metadata. Save the access key first if needed.";
       }
 
+      await refreshFeeders();
       await refreshStatus();
       window.setInterval(refreshStatus, 15000);
+    }
+
+    async function refreshFeeders() {
+      try {
+        feederState = await fetchJson("/api/feeders", { includeKey: true });
+        renderFeeders();
+      } catch (error) {
+        feedersGrid.innerHTML = `<div class="empty-state">${escapeHtml(error.message)}</div>`;
+      }
     }
 
     async function refreshStatus() {
@@ -362,6 +525,132 @@
       return await response.json();
     }
 
+    function renderFeeders() {
+      const providers = feederState.providers || [];
+      const available = providers.filter(provider => !provider.selected);
+      const selected = providers.filter(provider => provider.selected);
+
+      lanHostBadge.textContent = `LAN host: ${feederState.lanHost || window.location.hostname}`;
+
+      providerSelect.innerHTML = available.length
+        ? available.map(provider => `<option value="${escapeAttribute(provider.id)}">${escapeHtml(provider.name)}</option>`).join("")
+        : '<option value="">All feeder profiles added</option>';
+
+      providerSelect.disabled = available.length === 0;
+      addFeederBtn.disabled = available.length === 0;
+
+      if (!selected.length) {
+        feedersGrid.innerHTML = `
+          <div class="empty-state">
+            No feeder profiles added yet. Pick a network above and the host will save the matching connection details for you.
+          </div>`;
+        return;
+      }
+
+      feedersGrid.innerHTML = selected.map(provider => renderProvider(provider)).join("");
+
+      feedersGrid.querySelectorAll("[data-action='copy-local']").forEach(button => {
+        button.addEventListener("click", () => copyProvider(button.dataset.providerId, "local"));
+      });
+
+      feedersGrid.querySelectorAll("[data-action='copy-lan']").forEach(button => {
+        button.addEventListener("click", () => copyProvider(button.dataset.providerId, "lan"));
+      });
+
+      feedersGrid.querySelectorAll("[data-action='remove']").forEach(button => {
+        button.addEventListener("click", () => removeProvider(button.dataset.providerId));
+      });
+    }
+
+    function renderProvider(provider) {
+      return `
+        <article class="feeder-card">
+          <div class="feeder-topline">
+            <div>
+              <div class="eyebrow-mini">Feeder Profile</div>
+              <h3 class="feeder-title">${escapeHtml(provider.name)}</h3>
+            </div>
+            <div class="badge">${escapeHtml(provider.badge)}</div>
+          </div>
+          <div class="feeder-copy">${escapeHtml(provider.summary)}</div>
+          <div class="small" style="margin-bottom: 12px;">${escapeHtml(provider.installHint)}</div>
+          <div class="small" style="margin-bottom: 14px;"><strong>${escapeHtml(provider.sourceLabel)}</strong></div>
+
+          <div class="feeder-columns">
+            <div class="meta-item">
+              <div class="meta-label">Same Host</div>
+              <div class="field-list">${renderSettings(provider.localSettings)}</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">From Another Device</div>
+              <div class="field-list">${renderSettings(provider.lanSettings)}</div>
+            </div>
+          </div>
+
+          <ul class="feeder-notes">${provider.notes.map(note => `<li>${escapeHtml(note)}</li>`).join("")}</ul>
+
+          <div class="feeder-actions">
+            <button class="secondary" data-action="copy-local" data-provider-id="${escapeAttribute(provider.id)}">Copy Same-Host Setup</button>
+            <button class="secondary" data-action="copy-lan" data-provider-id="${escapeAttribute(provider.id)}">Copy LAN Setup</button>
+            <button class="ghost-button" data-action="remove" data-provider-id="${escapeAttribute(provider.id)}">Remove</button>
+          </div>
+        </article>`;
+    }
+
+    function renderSettings(settings) {
+      return settings.map(setting => `
+        <div class="field-row">
+          <div class="field-label">${escapeHtml(setting.label)}</div>
+          <div class="field-value">${escapeHtml(setting.value)}</div>
+        </div>`).join("");
+    }
+
+    async function copyProvider(providerId, mode) {
+      const provider = findProvider(providerId);
+      if (!provider) {
+        render("Unable to find that feeder profile.");
+        return;
+      }
+
+      const settings = mode === "lan" ? provider.lanSettings : provider.localSettings;
+      const lines = [
+        provider.name,
+        "",
+        provider.summary,
+        "",
+        ...settings.map(setting => `${setting.label}: ${setting.value}`),
+        "",
+        ...provider.notes
+      ];
+
+      await copyText(lines.join("\n"), `Copied ${provider.name} ${mode === "lan" ? "LAN" : "same-host"} setup.`);
+    }
+
+    async function removeProvider(providerId) {
+      render("Removing feeder profile...");
+
+      try {
+        feederState = await fetchJson(`/api/feeders/${encodeURIComponent(providerId)}`, { method: "DELETE", includeKey: true });
+        render(`Removed ${findProvider(providerId)?.name || "feeder"} from the saved host profiles.`);
+        renderFeeders();
+      } catch (error) {
+        render(error.message);
+      }
+    }
+
+    async function copyText(value, successMessage) {
+      try {
+        await navigator.clipboard.writeText(value);
+        render(successMessage);
+      } catch {
+        render("Unable to copy automatically. Copy it manually from the card.");
+      }
+    }
+
+    function findProvider(providerId) {
+      return (feederState.providers || []).find(provider => provider.id === providerId) || null;
+    }
+
     function formatPayload(payload) {
       if (payload.output || payload.error) {
         const bits = [];
@@ -375,6 +664,18 @@
 
     function render(text) {
       terminal.textContent = text || "(no output)";
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function escapeAttribute(value) {
+      return escapeHtml(value).replaceAll("'", "&#39;");
     }
 
     bootstrap();

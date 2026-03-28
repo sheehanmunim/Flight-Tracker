@@ -34,6 +34,7 @@ If the map does not open, go to `http://localhost:8080`.
 - start the tracker
 - stop the tracker
 - refresh status
+- add feeder profiles for FlightAware, Flightradar24, and airplanes.live
 - open the local map
 - open the feeder guide
 - open logs
@@ -50,9 +51,12 @@ The dashboard can:
 - start the tracker
 - stop the tracker
 - refresh tracker status
+- add feeder profiles from an `Add Feeder To` dropdown
 - run the host check
 - show recent dump1090 and Beast bridge logs
 - open the map on the same host
+
+Added feeder profiles are saved on the host, so the browser dashboard and the Windows app stay in sync.
 
 It binds to `0.0.0.0:5099`, so you can also open it from another device on your LAN
 if you use the Windows host's IP address and include the same `?key=...` query value.
@@ -69,6 +73,7 @@ decoder. The browser controls that host, but it does not replace the host OS USB
 `macOS/Run-FlightTracker-Mac.command` opens the browser dashboard from a Mac.
 
 It is a lightweight launcher for the hosted dashboard, not a native macOS SDR decoder. See `macOS/README.md` for setup.
+Because the Mac client opens the same dashboard, it includes the same `Add Feeder To` UI as the browser host view.
 
 ## Feed Outputs
 

@@ -1,6 +1,7 @@
 logs/beast-bridge.log
 logs/beast-bridge.pid
 logs/dashboard.key
+logs/feeders.json
 scripts/__pycache__/
 *.pyc
 ui/**/bin/

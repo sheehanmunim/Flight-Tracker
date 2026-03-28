@@ -9,6 +9,8 @@
 3. If needed, replace that URL with the correct Windows host IP and the same `?key=...` value.
 4. Double-click `Run-FlightTracker-Mac.command` on the Mac.
 
+Once open, the dashboard includes the same `Add Feeder To` flow as the Windows host browser view.
+
 ## Important Note
 
 The browser dashboard can control the Windows host and show its status, but it does

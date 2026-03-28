@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
+using FlightTracker.Shared;
 
 var repoRoot = RepoPaths.FindRepoRoot();
 var dashboardKey = RepoPaths.GetOrCreateDashboardKey(repoRoot);
@@ -49,6 +50,23 @@ app.MapGet("/api/meta", (HttpRequest request) =>
         usbNote = "The browser can control the host, but the RTL-SDR still has to be attached to the host OS running the decoder.",
         beastNote = "The local Beast bridge uses synthetic timestamps. Keep MLAT disabled."
     });
+});
+
+app.MapGet("/api/feeders", (HttpRequest request) =>
+{
+    return Results.Json(FeederApi.BuildResponse(repoRoot, request.Host.Host));
+});
+
+app.MapPost("/api/feeders/{id}", (string id, HttpRequest request) =>
+{
+    FeederProfiles.AddSelection(repoRoot, id);
+    return Results.Json(FeederApi.BuildResponse(repoRoot, request.Host.Host));
+});
+
+app.MapDelete("/api/feeders/{id}", (string id, HttpRequest request) =>
+{
+    FeederProfiles.RemoveSelection(repoRoot, id);
+    return Results.Json(FeederApi.BuildResponse(repoRoot, request.Host.Host));
 });
 
 app.MapGet("/api/status", async () =>
@@ -203,3 +221,47 @@ internal static class ScriptRunner
 }
 
 internal sealed record ScriptResult(bool Ok, string Output, string Error, int ExitCode);
+
+internal static class FeederApi
+{
+    public static object BuildResponse(string repoRoot, string requestHost)
+    {
+        var lanHost = ResolveLanHost(requestHost);
+        var catalog = FeederProfiles.GetCatalog(lanHost);
+        var selections = FeederProfiles.LoadSelections(repoRoot);
+        var selectedIds = selections.SelectedIds
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        return new
+        {
+            lanHost,
+            providers = catalog.Select(provider => new
+            {
+                provider.Id,
+                provider.Name,
+                provider.Badge,
+                provider.Summary,
+                provider.InstallHint,
+                provider.SourceLabel,
+                localSettings = provider.LocalSettings,
+                lanSettings = provider.LanSettings,
+                provider.Notes,
+                selected = selectedIds.Contains(provider.Id)
+            }),
+            selectedIds = selectedIds.OrderBy(id => id, StringComparer.OrdinalIgnoreCase).ToArray()
+        };
+    }
+
+    private static string ResolveLanHost(string requestHost)
+    {
+        if (!string.IsNullOrWhiteSpace(requestHost)
+            && !string.Equals(requestHost, "localhost", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(requestHost, "127.0.0.1", StringComparison.OrdinalIgnoreCase))
+        {
+            return requestHost;
+        }
+
+        return FeederProfiles.GetLanHost();
+    }
+}

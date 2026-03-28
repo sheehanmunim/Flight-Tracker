@@ -4,4 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\Shared\FeederProfiles.cs" Link="Shared\FeederProfiles.cs" />
+  </ItemGroup>
 </Project>
