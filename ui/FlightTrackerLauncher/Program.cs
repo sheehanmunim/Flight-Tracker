@@ -39,7 +39,7 @@ internal sealed class MainForm : Form
         _startScript = Path.Combine(_repoRoot, "scripts", "Start-LocalFlightTracker.ps1");
         _statusScript = Path.Combine(_repoRoot, "scripts", "Status-LocalFlightTracker.ps1");
         _stopScript = Path.Combine(_repoRoot, "scripts", "Stop-LocalFlightTracker.ps1");
-        _webLauncher = Path.Combine(_repoRoot, "FlightTrackerWeb.cmd");
+        _webLauncher = Path.Combine(_repoRoot, "Run-FlightTracker-Browser.cmd");
         _feedersGuide = Path.Combine(_repoRoot, "feeders", "README.md");
         _logFile = Path.Combine(_repoRoot, "logs", "dump1090.log");
 
@@ -270,7 +270,8 @@ internal sealed class MainForm : Form
 
         while (current is not null)
         {
-            if (File.Exists(Path.Combine(current.FullName, "Start-LocalFlightTracker.cmd")))
+            if (File.Exists(Path.Combine(current.FullName, "Run-FlightTracker-Windows.cmd"))
+                && File.Exists(Path.Combine(current.FullName, "scripts", "Start-LocalFlightTracker.ps1")))
             {
                 return current.FullName;
             }

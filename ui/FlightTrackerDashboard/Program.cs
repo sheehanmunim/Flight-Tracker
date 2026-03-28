@@ -126,7 +126,8 @@ static class RepoPaths
             var current = start;
             while (current is not null)
             {
-                if (File.Exists(Path.Combine(current.FullName, "Start-LocalFlightTracker.cmd")))
+                if (File.Exists(Path.Combine(current.FullName, "Run-FlightTracker-Browser.cmd"))
+                    && File.Exists(Path.Combine(current.FullName, "scripts", "Start-LocalFlightTracker.ps1")))
                 {
                     return current.FullName;
                 }
