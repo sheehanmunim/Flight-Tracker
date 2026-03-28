@@ -12,14 +12,13 @@ multi-feeder Linux stack.
 ## Start
 
 1. Plug in your RTL-SDR dongle and antenna.
-2. For the desktop app, double-click `FlightTrackerApp.cmd`.
-3. For the original script-only flow, double-click `Start-LocalFlightTracker.cmd`.
-4. For the browser dashboard, double-click `FlightTrackerWeb.cmd`.
-5. If the browser does not open, go to `http://localhost:8080`.
+2. Use exactly one of these launchers:
 
-To stop it, run `Stop-LocalFlightTracker.cmd`.
+- Windows desktop app: `Run-FlightTracker-Windows.cmd`
+- Browser dashboard host: `Run-FlightTracker-Browser.cmd`
+- Mac client opener: `macOS/Run-FlightTracker-Mac.command`
 
-To check what Windows sees, run `Status-LocalFlightTracker.cmd`.
+If the map does not open, go to `http://localhost:8080`.
 
 ## What This Uses
 
@@ -30,7 +29,9 @@ To check what Windows sees, run `Status-LocalFlightTracker.cmd`.
 
 ## Windows App
 
-`FlightTrackerApp.cmd` builds and launches a small Windows desktop app that can:
+`Run-FlightTracker-Windows.cmd` launches the Windows desktop app.
+
+Under the hood it calls `FlightTrackerApp.cmd`, which builds and launches a small app that can:
 
 - start the tracker
 - stop the tracker
@@ -44,7 +45,7 @@ If the .NET 8 SDK is not already available, the launcher installs it to
 
 ## Browser Dashboard
 
-`FlightTrackerWeb.cmd` starts a local browser dashboard on port `5099` and opens it
+`Run-FlightTracker-Browser.cmd` starts the browser dashboard on port `5099` and opens it
 with an access key in the URL.
 
 The dashboard can:
@@ -68,10 +69,10 @@ decoder. The browser controls that host, but it does not replace the host OS USB
 
 ## macOS Launcher
 
-The `macOS/FlightTrackerMac.command` helper opens the browser dashboard from a Mac.
+`macOS/Run-FlightTracker-Mac.command` opens the browser dashboard from a Mac.
 
 It is a lightweight launcher for the hosted dashboard, not a native macOS SDR decoder.
-See `macOS/README.md` for setup.
+Under the hood it calls `macOS/FlightTrackerMac.command`. See `macOS/README.md` for setup.
 
 ## Feed Outputs
 
@@ -148,7 +149,7 @@ privileges before Debian can be installed.
 `The SDR is busy`
 
 - Close other SDR apps such as SDR#, dump1090, rtl_test, or Virtual Radar tools.
-- Run `Stop-LocalFlightTracker.cmd` and start again.
+- Run `Stop-LocalFlightTracker.cmd` and then launch one of the `Run-FlightTracker-*` entrypoints again.
 
 `Port 8080 is already in use`
 
@@ -162,11 +163,14 @@ privileges before Debian can be installed.
 
 ## Files
 
-- `FlightTrackerApp.cmd`: builds and launches the Windows desktop app
-- `FlightTrackerWeb.cmd`: starts the browser dashboard
-- `Start-LocalFlightTracker.cmd`: starts the local tracker
-- `Stop-LocalFlightTracker.cmd`: stops the local tracker
-- `Status-LocalFlightTracker.cmd`: prints hardware and web status
+- `Run-FlightTracker-Windows.cmd`: simple Windows desktop entrypoint
+- `Run-FlightTracker-Browser.cmd`: simple browser dashboard entrypoint
+- `macOS/Run-FlightTracker-Mac.command`: simple Mac entrypoint
+- `FlightTrackerApp.cmd`: Windows app launcher used under the hood
+- `FlightTrackerWeb.cmd`: browser dashboard launcher used under the hood
+- `Start-LocalFlightTracker.cmd`: legacy low-level tracker launcher
+- `Stop-LocalFlightTracker.cmd`: low-level stop script
+- `Status-LocalFlightTracker.cmd`: low-level status script
 - `dump1090-local.cfg`: local config overrides
 - `feeders/README.md`: optional bridge guide for FlightAware, airplanes.live, and Flightradar24
-- `macOS/FlightTrackerMac.command`: opens the dashboard from a Mac
+- `macOS/FlightTrackerMac.command`: low-level Mac dashboard opener
