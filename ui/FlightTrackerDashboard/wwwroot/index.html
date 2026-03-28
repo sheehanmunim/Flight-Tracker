@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flight Tracker Dashboard</title>
+  <style>
+    :root {
+      --bg: #f7f4ec;
+      --panel: rgba(255,255,255,0.82);
+      --ink: #1f2b24;
+      --muted: #617267;
+      --accent: #0f766e;
+      --accent-2: #b45309;
+      --line: rgba(31,43,36,0.12);
+      --shadow: 0 20px 60px rgba(25, 41, 34, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(15,118,110,0.14), transparent 30%),
+        radial-gradient(circle at top right, rgba(180,83,9,0.12), transparent 24%),
+        linear-gradient(160deg, #f5efe0 0%, #f7f4ec 58%, #eef6f4 100%);
+      min-height: 100vh;
+    }
+
+    .shell {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 20px 40px;
+    }
+
+    .hero {
+      margin-bottom: 20px;
+    }
+
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1;
+    }
+
+    .lead {
+      max-width: 860px;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.6;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 18px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .controls, .status {
+      padding: 20px;
+    }
+
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 1.15rem;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    button, .linkish {
+      appearance: none;
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 140ms ease, opacity 140ms ease, background 140ms ease;
+    }
+
+    button:hover, .linkish:hover { transform: translateY(-1px); }
+    button:disabled { opacity: 0.6; cursor: wait; transform: none; }
+    .primary { background: var(--accent); color: white; }
+    .secondary { background: #dbece8; color: var(--ink); }
+    .warning { background: #f7e6cb; color: #7c3f00; }
+    .danger { background: #f4d8d7; color: #7a2222; }
+
+    .meta-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .meta-item {
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.75);
+      border: 1px solid var(--line);
+    }
+
+    .meta-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .callout {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(15,118,110,0.12), rgba(180,83,9,0.12));
+      border: 1px solid rgba(15,118,110,0.14);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+
+    .status-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .map-link {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .terminal {
+      background: #14211c;
+      color: #d7f2e5;
+      border-radius: 18px;
+      padding: 16px;
+      min-height: 440px;
+      white-space: pre-wrap;
+      overflow: auto;
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 0.93rem;
+      line-height: 1.5;
+    }
+
+    .key-box {
+      display: flex;
+      gap: 8px;
+      margin: 12px 0 0;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      font: inherit;
+      background: rgba(255,255,255,0.9);
+    }
+
+    @media (max-width: 920px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="hero">
+      <div class="eyebrow">Flight Tracker Dashboard</div>
+      <h1>Control the host from a browser.</h1>
+      <div class="lead">
+        Start, stop, inspect logs, and open the aircraft map from any browser that can reach this host.
+        The dashboard controls the machine running the SDR decoder. It does not directly claim the USB dongle inside the browser.
+      </div>
+    </div>
+
+    <div class="layout">
+      <section class="panel controls">
+        <h2 class="section-title">Controls</h2>
+        <div class="button-grid">
+          <button class="primary" id="startBtn">Start Tracker</button>
+          <button class="danger" id="stopBtn">Stop Tracker</button>
+          <button class="secondary" id="statusBtn">Refresh Status</button>
+          <button class="warning" id="hostBtn">Host Check</button>
+          <button class="secondary" id="dumpLogBtn">Dump1090 Log</button>
+          <button class="secondary" id="beastLogBtn">Beast Log</button>
+        </div>
+
+        <div class="small">Access key</div>
+        <div class="key-box">
+          <input id="keyInput" type="text" placeholder="Paste the ?key= value here if needed">
+          <button class="secondary" id="saveKeyBtn">Save</button>
+        </div>
+
+        <div class="meta-list">
+          <div class="meta-item">
+            <div class="meta-label">Map</div>
+            <div><a id="mapLink" class="map-link" href="#" target="_blank" rel="noreferrer">Open local aircraft map</a></div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">Beast</div>
+            <div>TCP `30005` for Beast-only feeders. Keep MLAT disabled.</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">USB</div>
+            <div id="usbNote">Loading...</div>
+          </div>
+        </div>
+
+        <div class="callout">
+          If you are opening this from a Mac, this dashboard talks to the Windows host over HTTP.
+          Plug the RTL-SDR into the host machine that is actually running the tracker.
+        </div>
+      </section>
+
+      <section class="panel status">
+        <div class="status-head">
+          <div>
+            <h2 class="section-title" style="margin-bottom: 4px;">Status Output</h2>
+            <div class="small">Live script output from the host machine.</div>
+          </div>
+          <a id="mapLinkTop" class="map-link" href="#" target="_blank" rel="noreferrer">Open map</a>
+        </div>
+        <div id="terminal" class="terminal">Loading...</div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const terminal = document.getElementById("terminal");
+    const keyInput = document.getElementById("keyInput");
+    const saveKeyBtn = document.getElementById("saveKeyBtn");
+    const mapLink = document.getElementById("mapLink");
+    const mapLinkTop = document.getElementById("mapLinkTop");
+    const usbNote = document.getElementById("usbNote");
+
+    const params = new URLSearchParams(window.location.search);
+    const storedKey = window.localStorage.getItem("flight-tracker-dashboard-key") || "";
+    const queryKey = params.get("key") || "";
+    let dashboardKey = queryKey || storedKey;
+    keyInput.value = dashboardKey;
+
+    const mapUrl = `${window.location.protocol}//${window.location.hostname}:8080`;
+    mapLink.href = mapUrl;
+    mapLinkTop.href = mapUrl;
+
+    saveKeyBtn.addEventListener("click", () => {
+      dashboardKey = keyInput.value.trim();
+      window.localStorage.setItem("flight-tracker-dashboard-key", dashboardKey);
+      render("Saved key locally. Refreshing...");
+      refreshStatus();
+    });
+
+    document.getElementById("startBtn").addEventListener("click", () => callApi("/api/start", "POST"));
+    document.getElementById("stopBtn").addEventListener("click", () => callApi("/api/stop", "POST"));
+    document.getElementById("statusBtn").addEventListener("click", () => refreshStatus());
+    document.getElementById("hostBtn").addEventListener("click", () => callApi("/api/host-check", "POST"));
+    document.getElementById("dumpLogBtn").addEventListener("click", () => callApi("/api/logs/dump1090", "GET"));
+    document.getElementById("beastLogBtn").addEventListener("click", () => callApi("/api/logs/beast", "GET"));
+
+    async function bootstrap() {
+      try {
+        const meta = await fetchJson("/api/meta", { includeKey: false });
+        usbNote.textContent = meta.usbNote;
+      } catch {
+        usbNote.textContent = "Unable to load dashboard metadata.";
+      }
+
+      await refreshStatus();
+      window.setInterval(refreshStatus, 15000);
+    }
+
+    async function refreshStatus() {
+      await callApi("/api/status", "GET", false);
+    }
+
+    async function callApi(path, method, showWorking = true) {
+      if (showWorking) {
+        render("Working...");
+      }
+
+      try {
+        const payload = await fetchJson(path, { method, includeKey: true });
+        render(formatPayload(payload));
+      } catch (error) {
+        render(error.message);
+      }
+    }
+
+    async function fetchJson(path, options) {
+      const headers = {};
+      if (options.includeKey && dashboardKey) {
+        headers["X-FlightTracker-Key"] = dashboardKey;
+      }
+
+      const response = await fetch(path, {
+        method: options.method || "GET",
+        headers
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || `Request failed with ${response.status}`);
+      }
+
+      return await response.json();
+    }
+
+    function formatPayload(payload) {
+      if (payload.output || payload.error) {
+        const bits = [];
+        if (payload.output) bits.push(payload.output);
+        if (payload.error) bits.push(payload.error);
+        return bits.join("\n\n");
+      }
+
+      return JSON.stringify(payload, null, 2);
+    }
+
+    function render(text) {
+      terminal.textContent = text || "(no output)";
+    }
+
+    bootstrap();
+  </script>
+</body>
+</html>

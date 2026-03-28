@@ -19,6 +19,7 @@ internal sealed class MainForm : Form
     private readonly string _startScript;
     private readonly string _statusScript;
     private readonly string _stopScript;
+    private readonly string _webLauncher;
     private readonly string _feedersGuide;
     private readonly string _logFile;
 
@@ -27,6 +28,7 @@ internal sealed class MainForm : Form
     private readonly Button _stopButton;
     private readonly Button _refreshButton;
     private readonly Button _openMapButton;
+    private readonly Button _openWebButton;
     private readonly Button _openGuideButton;
     private readonly Button _openLogsButton;
     private readonly Label _summaryLabel;
@@ -37,6 +39,7 @@ internal sealed class MainForm : Form
         _startScript = Path.Combine(_repoRoot, "scripts", "Start-LocalFlightTracker.ps1");
         _statusScript = Path.Combine(_repoRoot, "scripts", "Status-LocalFlightTracker.ps1");
         _stopScript = Path.Combine(_repoRoot, "scripts", "Stop-LocalFlightTracker.ps1");
+        _webLauncher = Path.Combine(_repoRoot, "FlightTrackerWeb.cmd");
         _feedersGuide = Path.Combine(_repoRoot, "feeders", "README.md");
         _logFile = Path.Combine(_repoRoot, "logs", "dump1090.log");
 
@@ -73,6 +76,7 @@ internal sealed class MainForm : Form
         _stopButton = CreateButton("Stop Tracker", async (_, _) => await RunAndRefreshAsync(_stopScript));
         _refreshButton = CreateButton("Refresh Status", async (_, _) => await RefreshStatusAsync());
         _openMapButton = CreateButton("Open Map", (_, _) => OpenExternal("http://localhost:8080"));
+        _openWebButton = CreateButton("Launch Web Dashboard", (_, _) => OpenExternal(_webLauncher));
         _openGuideButton = CreateButton("Open Feed Guide", (_, _) => OpenExternal(_feedersGuide));
         _openLogsButton = CreateButton("Open Logs", (_, _) => OpenExternal(_logFile));
 
@@ -90,6 +94,7 @@ internal sealed class MainForm : Form
             _stopButton,
             _refreshButton,
             _openMapButton,
+            _openWebButton,
             _openGuideButton,
             _openLogsButton
         ]);
@@ -254,6 +259,7 @@ internal sealed class MainForm : Form
         _stopButton.Enabled = enabled;
         _refreshButton.Enabled = enabled;
         _openMapButton.Enabled = enabled;
+        _openWebButton.Enabled = enabled;
         _openGuideButton.Enabled = enabled;
         _openLogsButton.Enabled = enabled;
     }

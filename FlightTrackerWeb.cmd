@@ -1,0 +1,51 @@
+@echo off
+setlocal
+
+set "ROOT=%~dp0"
+set "PROJECT=%ROOT%ui\FlightTrackerDashboard\FlightTrackerDashboard.csproj"
+set "USER_DOTNET=%USERPROFILE%\.dotnet\dotnet.exe"
+set "DOTNET_EXE="
+set "PORT=5099"
+set "KEY_FILE=%ROOT%logs\dashboard.key"
+
+if exist "%USER_DOTNET%" (
+  set "DOTNET_EXE=%USER_DOTNET%"
+) else (
+  set "DOTNET_EXE=dotnet"
+)
+
+"%DOTNET_EXE%" --list-sdks >nul 2>&1
+if errorlevel 1 (
+  echo Installing the .NET 8 SDK to %USERPROFILE%\.dotnet ...
+  powershell -ExecutionPolicy Bypass -Command ^
+    "$script = Join-Path $env:TEMP 'dotnet-install.ps1';" ^
+    "Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1' -OutFile $script;" ^
+    "& powershell -ExecutionPolicy Bypass -File $script -Channel 8.0 -InstallDir (Join-Path $env:USERPROFILE '.dotnet') -NoPath"
+  if errorlevel 1 exit /b %errorlevel%
+  set "DOTNET_EXE=%USER_DOTNET%"
+)
+
+if not exist "%ROOT%logs" mkdir "%ROOT%logs"
+
+set "LISTENER_COUNT=0"
+netstat -ano | findstr /r /c:":%PORT% .*LISTENING" >nul 2>&1
+if not errorlevel 1 set "LISTENER_COUNT=1"
+
+if "%LISTENER_COUNT%"=="0" (
+  if exist "%KEY_FILE%" del "%KEY_FILE%" >nul 2>&1
+  start "Flight Tracker Web" cmd /k ""%DOTNET_EXE%" run --project "%PROJECT%" -c Release --urls http://0.0.0.0:%PORT%"
+  powershell -ExecutionPolicy Bypass -Command "Start-Sleep -Seconds 6"
+)
+
+for /l %%I in (1,1,20) do (
+  if exist "%KEY_FILE%" goto key_ready
+  powershell -ExecutionPolicy Bypass -Command "Start-Sleep -Seconds 1"
+)
+
+echo Dashboard key file was not created. Check the web console window.
+exit /b 1
+
+:key_ready
+set /p DASHBOARD_KEY=<"%KEY_FILE%"
+
+start "" "http://localhost:%PORT%/?key=%DASHBOARD_KEY%"

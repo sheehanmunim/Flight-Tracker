@@ -14,7 +14,8 @@ multi-feeder Linux stack.
 1. Plug in your RTL-SDR dongle and antenna.
 2. For the desktop app, double-click `FlightTrackerApp.cmd`.
 3. For the original script-only flow, double-click `Start-LocalFlightTracker.cmd`.
-4. If the browser does not open, go to `http://localhost:8080`.
+4. For the browser dashboard, double-click `FlightTrackerWeb.cmd`.
+5. If the browser does not open, go to `http://localhost:8080`.
 
 To stop it, run `Stop-LocalFlightTracker.cmd`.
 
@@ -40,6 +41,37 @@ To check what Windows sees, run `Status-LocalFlightTracker.cmd`.
 
 If the .NET 8 SDK is not already available, the launcher installs it to
 `%USERPROFILE%\.dotnet` using Microsoft's official `dotnet-install.ps1` script.
+
+## Browser Dashboard
+
+`FlightTrackerWeb.cmd` starts a local browser dashboard on port `5099` and opens it
+with an access key in the URL.
+
+The dashboard can:
+
+- start the tracker
+- stop the tracker
+- refresh tracker status
+- run the host check
+- show recent dump1090 and Beast bridge logs
+- open the map on the same host
+
+It binds to `0.0.0.0:5099`, so you can also open it from another device on your LAN
+if you use the Windows host's IP address and include the same `?key=...` query value.
+
+## Browser USB Note
+
+The browser dashboard does not directly attach the RTL-SDR dongle.
+
+The dongle still has to be plugged into the machine that is actually running the
+decoder. The browser controls that host, but it does not replace the host OS USB layer.
+
+## macOS Launcher
+
+The `macOS/FlightTrackerMac.command` helper opens the browser dashboard from a Mac.
+
+It is a lightweight launcher for the hosted dashboard, not a native macOS SDR decoder.
+See `macOS/README.md` for setup.
 
 ## Feed Outputs
 
@@ -131,8 +163,10 @@ privileges before Debian can be installed.
 ## Files
 
 - `FlightTrackerApp.cmd`: builds and launches the Windows desktop app
+- `FlightTrackerWeb.cmd`: starts the browser dashboard
 - `Start-LocalFlightTracker.cmd`: starts the local tracker
 - `Stop-LocalFlightTracker.cmd`: stops the local tracker
 - `Status-LocalFlightTracker.cmd`: prints hardware and web status
 - `dump1090-local.cfg`: local config overrides
 - `feeders/README.md`: optional bridge guide for FlightAware, airplanes.live, and Flightradar24
+- `macOS/FlightTrackerMac.command`: opens the dashboard from a Mac
