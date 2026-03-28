@@ -1,0 +1,28 @@
+﻿---------------------------------------------------------------------------------
+01:37:32.848: Starting: C:\Users\busin\OneDrive\Documents\Flight Tracker\vendor\Dump1090\dump1090.exe --config ..\..\dump1090-local.cfg --interactive --net
+
+01:37:36.402: Force updating 'C:\Users\busin\OneDrive\Documents\Flight Tracker\vendor\Dump1090\aircraft-database.csv' since it does not exist.
+01:37:36.402: File 'C:\Users\busin\AppData\Local\Temp\dump1090\aircraft-database-temp.zip' doesn't exist (or is truncated). Forcing a download.
+01:37:36.403: Force updating 'C:\Users\busin\AppData\Local\Temp\dump1090\aircraft-database-temp.zip' from 'https://s3.opensky-network.org/data-samples/metadata/aircraftDatabase.zip'
+01:37:48.654: Copied 'C:\Users\busin\AppData\Local\Temp\dump1090\aircraft-database-temp.csv' -> 'C:\Users\busin\OneDrive\Documents\Flight Tracker\vendor\Dump1090\aircraft-database.csv'
+01:37:48.912: Deleting 'C:\Users\busin\OneDrive\Documents\Flight Tracker\vendor\Dump1090\aircraft-database.csv.sqlite' to force a rebuild in 'aircraft_CSV_load()'
+01:37:48.955: using Sqlite file: "C:\Users\busin\OneDrive\Documents\Flight Tracker\vendor\Dump1090\aircraft-database.csv.sqlite".
+01:37:48.955: Loading 'C:\Users\busin\OneDrive\Documents\Flight Tracker\vendor\Dump1090\aircraft-database.csv' could take some time.
+01:38:08.145: Creating SQL-database 'C:\Users\busin\OneDrive\Documents\Flight Tracker\vendor\Dump1090\aircraft-database.csv.sqlite'... 01:38:32.612: Created 519998 records
+01:38:33.939: Do not redirect 'stdout' in interactive mode.
+Do 'C:\Users\busin\OneDrive\Documents\Flight Tracker\vendor\Dump1090\dump1090.exe [options] 2> file` instead.
+
+---------------------------------------------------------------------------------
+01:39:44.301: Starting: C:\Users\busin\OneDrive\Documents\Flight Tracker\vendor\Dump1090\dump1090.exe --config ..\..\dump1090-local.cfg --net --debug g
+
+01:39:47.021: C:\Users\tyler\Dump1090\src\aircraft.c(1021): Aircraft Sqlite database "C:\Users\busin\OneDrive\Documents\Flight Tracker\vendor\Dump1090\aircraft-database.csv.sqlite", size: 19292160
+01:39:47.023: C:\Users\tyler\Dump1090\src\aircraft.c(1066): 'C:\Users\busin\OneDrive\Documents\Flight Tracker\vendor\Dump1090\aircraft-database.csv.sqlite' is 0 days older than the CSV-file
+01:39:47.025: using Sqlite file: "C:\Users\busin\OneDrive\Documents\Flight Tracker\vendor\Dump1090\aircraft-database.csv.sqlite".
+01:39:47.461: C:\Users\tyler\Dump1090\src\airports.c(573): Parsed 57421 records in 436.655 msec from: "C:\Users\busin\OneDrive\Documents\Flight Tracker\vendor\Dump1090\airport-codes.csv"
+01:39:47.461: C:\Users\tyler\Dump1090\src\airports.c(576): ICAO names: 57421, IATA names: 9225
+01:39:47.551: C:\Users\tyler\Dump1090\src\airports.c(1336, main-thread): c_in: 0xFFFFFFFF, state: 6
+01:39:47.551: C:\Users\tyler\Dump1090\src\airports.c(1350): Parsed 0/0/0 records from: "C:\Users\busin\AppData\Local\Temp\dump1090\airport-api-cache.csv"
+01:39:47.570: Found 1 device(s):
+01:39:47.576: 0: ??         ??                   SN: ??
+01:39:47.582: Error opening the RTLSDR device `0`: 5: Access is denied.
+01:39:47.582: C:\Users\tyler\Dump1090\src\dump1090.c(4613): modeS_init_RTLSDR(): rc: 0.
