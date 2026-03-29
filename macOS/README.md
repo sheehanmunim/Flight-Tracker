@@ -9,7 +9,7 @@
 3. If needed, replace that URL with the correct Windows host IP and the same `?key=...` value.
 4. Double-click `Run-FlightTracker-Mac.command` on the Mac.
 
-Once open, the dashboard includes the same `Add Feeder To` flow as the Windows host browser view, including the native `Connect On Host` control for `airplanes.live`.
+Once open, the dashboard includes the same `Add Feeder To` flow as the Windows host browser view, including the native `Connect On Host` controls for `FlightAware` and `airplanes.live`.
 
 ## Important Note
 

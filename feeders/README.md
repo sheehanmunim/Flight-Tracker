@@ -29,7 +29,15 @@ Recommended with this repo:
 
 ## FlightAware
 
-If you run PiAware on Linux, WSL, or another host, point it at the Beast bridge:
+This repo now includes a native Windows-side FlightAware uploader.
+
+It:
+
+- logs into `piaware.flightaware.com:1200` over TLS
+- requests or reuses a cached feeder ID automatically
+- uploads SBS-derived aircraft updates from `127.0.0.1:30003`
+
+If you want to use PiAware on Linux, WSL, or another host instead, point it at the Beast bridge:
 
 ```text
 receiver-type other
@@ -63,6 +71,7 @@ This repo provides:
 
 - the local decoder
 - the local Beast bridge
+- a native Windows host connector for `FlightAware`
 - a native Windows host connector for `airplanes.live`
 
 It does not install or manage:

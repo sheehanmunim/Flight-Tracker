@@ -114,7 +114,7 @@ Write-PortStatus -Port 30002 -Label "AVR/raw"
 Write-PortStatus -Port 30003 -Label "SBS"
 Write-PortStatus -Port 30005 -Label "Beast"
 Write-Host "FR24           : can use AVR on tcp://127.0.0.1:30002"
-Write-Host "FlightAware    : can use Beast on tcp://127.0.0.1:30005, but synthetic timestamps mean MLAT should stay off"
+Write-Host "FlightAware    : native host uploader can use SBS on tcp://127.0.0.1:30003; external/manual setups can use Beast on tcp://127.0.0.1:30005 with MLAT off"
 Write-Host "airplanes.live : can use Beast on tcp://127.0.0.1:30005, but synthetic timestamps mean MLAT should stay off"
 
 if ($tracker) {
@@ -155,13 +155,18 @@ $nativeStatusScript = Join-Path $paths.Root "scripts\Manage-NativeFeeder.ps1"
 if (Test-Path -LiteralPath $nativeStatusScript) {
     Write-Host ""
     Write-Host "Native feeder status:"
-    & powershell.exe -ExecutionPolicy Bypass -File $nativeStatusScript -Provider "airplanes-live" -Action Status
-
-    $airplanesLog = Join-Path $paths.Root "logs\airplanes-live.log"
-    $airplanesTail = Get-RecentLogTail -LogPath $airplanesLog
-    if ($airplanesTail) {
+    foreach ($provider in @("flightaware", "airplanes-live")) {
+        & powershell.exe -ExecutionPolicy Bypass -File $nativeStatusScript -Provider $provider -Action Status
         Write-Host ""
-        Write-Host "Recent airplanes.live feeder log output:"
-        Write-Host $airplanesTail
+    }
+
+    foreach ($provider in @("flightaware", "airplanes-live")) {
+        $providerLog = Join-Path $paths.Root "logs\$provider.log"
+        $providerTail = Get-RecentLogTail -LogPath $providerLog
+        if ($providerTail) {
+            Write-Host "Recent $provider feeder log output:"
+            Write-Host $providerTail
+            Write-Host ""
+        }
     }
 }

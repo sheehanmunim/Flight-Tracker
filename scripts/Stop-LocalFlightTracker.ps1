@@ -10,10 +10,12 @@ $beastBridgePid = Join-Path $root "logs\beast-bridge.pid"
 $nativeFeederScript = Join-Path $root "scripts\Manage-NativeFeeder.ps1"
 
 if (Test-Path -LiteralPath $nativeFeederScript) {
-    try {
-        & powershell.exe -ExecutionPolicy Bypass -File $nativeFeederScript -Provider "airplanes-live" -Action Stop | Out-Null
-    }
-    catch {
+    foreach ($provider in @("airplanes-live", "flightaware")) {
+        try {
+            & powershell.exe -ExecutionPolicy Bypass -File $nativeFeederScript -Provider $provider -Action Stop | Out-Null
+        }
+        catch {
+        }
     }
 }
 

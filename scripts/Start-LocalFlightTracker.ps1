@@ -338,10 +338,12 @@ Write-Host "The Beast bridge uses synthetic timestamps, so it can help Beast-onl
 
 $nativeFeederScript = Join-Path $paths.Root "scripts\Manage-NativeFeeder.ps1"
 if (Test-Path -LiteralPath $nativeFeederScript) {
-    try {
-        & powershell.exe -ExecutionPolicy Bypass -File $nativeFeederScript -Provider "airplanes-live" -Action Ensure | Out-Null
-    }
-    catch {
-        Write-Host "Native feeder note: $($_.Exception.Message)" -ForegroundColor Yellow
+    foreach ($provider in @("airplanes-live", "flightaware")) {
+        try {
+            & powershell.exe -ExecutionPolicy Bypass -File $nativeFeederScript -Provider $provider -Action Ensure | Out-Null
+        }
+        catch {
+            Write-Host "Native feeder note ($provider): $($_.Exception.Message)" -ForegroundColor Yellow
+        }
     }
 }

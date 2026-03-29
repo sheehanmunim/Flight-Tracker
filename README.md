@@ -35,7 +35,7 @@ If the map does not open, go to `http://localhost:8080`.
 - stop the tracker
 - refresh status
 - add feeder profiles for FlightAware, Flightradar24, and airplanes.live
-- connect the native airplanes.live feeder directly from the app
+- connect the native FlightAware and airplanes.live feeders directly from the app
 - open the local map
 - open the feeder guide
 - open logs
@@ -53,9 +53,10 @@ The dashboard can:
 - stop the tracker
 - refresh tracker status
 - add feeder profiles from an `Add Feeder To` dropdown
-- connect or disconnect the native airplanes.live feeder from saved feeder cards
+- connect or disconnect the native FlightAware and airplanes.live feeders from saved feeder cards
 - run the host check
 - show recent dump1090 and Beast bridge logs
+- show the FlightAware connector log
 - show the airplanes.live connector log
 - open the map on the same host
 
@@ -80,14 +81,24 @@ Because the Mac client opens the same dashboard, it includes the same `Add Feede
 
 ## Native Feeder Control
 
-The host now has a real native feeder runtime for `airplanes.live`.
+The host now has real native feeder runtimes for `FlightAware` and `airplanes.live`.
+
+`FlightAware`
+
+- add the `FlightAware` profile in the Windows app or browser dashboard
+- click `Connect On Host`
+- the host logs into `piaware.flightaware.com:1200` over TLS
+- it caches the returned feeder ID automatically in the repo logs directory
+- it uploads SBS-derived aircraft updates from `127.0.0.1:30003`
+
+`airplanes.live`
 
 - add the `airplanes.live` profile in the Windows app or browser dashboard
 - click `Connect On Host`
 - the host opens its own outbound feeder connection to `feed.airplanes.live:30004`
 - the relay reads local Beast data from `127.0.0.1:30005`
 
-That connector is controlled from the same Windows app, browser dashboard, and Mac-opened dashboard, so the user does not have to install a separate Linux stack for this provider.
+Both connectors are controlled from the same Windows app, browser dashboard, and Mac-opened dashboard, so the user does not have to install a separate Linux stack for these providers.
 
 ## Feed Outputs
 
@@ -112,9 +123,9 @@ expected to produce useful MLAT results.
 
 `FlightAware`
 
-- PiAware's advanced configuration says external receivers must provide Beast binary
-  format over TCP for `receiver-type "relay"` or `receiver-type "other"`.
-- This project now provides a local Beast bridge on `127.0.0.1:30005`.
+- This repo now includes a native Windows host uploader for FlightAware.
+- It logs into FlightAware directly from this machine, caches the returned feeder ID, and uploads SBS-derived updates from `127.0.0.1:30003`.
+- For external/manual PiAware-style setups, the local Beast bridge on `127.0.0.1:30005` is still available.
 - Keep `allow-mlat no` with this bridge, because the timestamps are synthetic.
 
 `airplanes.live`
@@ -133,22 +144,22 @@ Use this Windows repo for:
 
 - verifying the dongle works
 - viewing a local map
+- feeding `FlightAware` directly from the built-in native host uploader
 - feeding Beast-only clients from `127.0.0.1:30005`
 - feeding `airplanes.live` directly from the built-in native host connector
 - optionally feeding `Flightradar24` from `127.0.0.1:30002` or `127.0.0.1:30005`
 
 Move to a Linux feeder host for:
 
-- `FlightAware` via PiAware
 - `Flightradar24` alongside the other two from the same Beast source
 
 For a concrete bridge layout and example configs, see `feeders/README.md`.
 
 ## Feeder Prerequisite Note
 
-The local Beast bridge is ready on Windows now, and `airplanes.live` can connect natively from this host.
+The local Beast bridge is ready on Windows now, and both `FlightAware` and `airplanes.live` can connect natively from this host.
 
-`FlightAware` and `Flightradar24` still do not have a native host uploader in this repo yet, so their cards currently save the correct host feed settings instead of opening a first-party uploader connection.
+`Flightradar24` still does not have a native host uploader in this repo, so its card currently saves the correct host feed settings instead of opening a first-party uploader connection.
 
 ## Troubleshooting
 

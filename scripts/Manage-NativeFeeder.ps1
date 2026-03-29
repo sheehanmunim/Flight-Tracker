@@ -61,9 +61,12 @@ function Get-ProviderSpec {
         "flightaware" {
             return [pscustomobject]@{
                 Provider = $Provider
-                Supported = $false
+                Supported = $true
                 DisplayName = "FlightAware"
-                Message = "A native FlightAware host connector is not implemented in this repo yet."
+                SourceHost = "127.0.0.1"
+                SourcePort = 30003
+                TargetHost = "piaware.flightaware.com"
+                TargetPort = 1200
             }
         }
         "flightradar24" {
@@ -189,6 +192,19 @@ function Ensure-UuidFile {
     }
 }
 
+function Initialize-ProviderState {
+    param(
+        [Parameter(Mandatory)]
+        $Spec,
+        [Parameter(Mandatory)]
+        $ProviderPaths
+    )
+
+    if ($Spec.Provider -eq "airplanes-live") {
+        Ensure-UuidFile -UuidFile $ProviderPaths.UuidFile
+    }
+}
+
 function Start-ProviderProcess {
     param(
         [Parameter(Mandatory)]
@@ -212,7 +228,7 @@ function Start-ProviderProcess {
         return $existing
     }
 
-    Ensure-UuidFile -UuidFile $ProviderPaths.UuidFile
+    Initialize-ProviderState -Spec $Spec -ProviderPaths $ProviderPaths
 
     $arguments = @(
         "-u"

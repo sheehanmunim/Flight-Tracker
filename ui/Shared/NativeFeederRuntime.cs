@@ -19,6 +19,9 @@ internal sealed class NativeFeederRuntimeStatus
     public string? Target { get; init; }
     public string? LastError { get; init; }
     public string? UpdatedAtUtc { get; init; }
+    public string? User { get; init; }
+    public string? FeederId { get; init; }
+    public int? MessagesUploaded { get; init; }
 }
 
 internal static class NativeFeederRuntime
@@ -93,13 +96,17 @@ internal static class NativeFeederRuntime
             Source = statusFile?.Source,
             Target = statusFile?.Target,
             LastError = statusFile?.LastError,
-            UpdatedAtUtc = statusFile?.UpdatedAtUtc
+            UpdatedAtUtc = statusFile?.UpdatedAtUtc,
+            User = statusFile?.User,
+            FeederId = statusFile?.FeederId,
+            MessagesUploaded = statusFile?.MessagesUploaded
         };
     }
 
     public static bool SupportsNativeConnector(string providerId)
     {
-        return string.Equals(providerId, "airplanes-live", StringComparison.OrdinalIgnoreCase);
+        return string.Equals(providerId, "airplanes-live", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(providerId, "flightaware", StringComparison.OrdinalIgnoreCase);
     }
 
     private static NativeFeederRuntimeStatusFile? LoadStatusFile(string repoRoot, string providerId)
@@ -157,4 +164,13 @@ internal sealed class NativeFeederRuntimeStatusFile
 
     [JsonPropertyName("updatedAtUtc")]
     public string? UpdatedAtUtc { get; set; }
+
+    [JsonPropertyName("user")]
+    public string? User { get; set; }
+
+    [JsonPropertyName("feederId")]
+    public string? FeederId { get; set; }
+
+    [JsonPropertyName("messagesUploaded")]
+    public int? MessagesUploaded { get; set; }
 }

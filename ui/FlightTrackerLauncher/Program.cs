@@ -555,6 +555,18 @@ internal sealed class MainForm : Form
         builder.AppendLine("Host connector:");
         builder.AppendLine($"  Status: {runtime.StatusLabel}");
         builder.AppendLine($"  Summary: {runtime.Summary}");
+        if (!string.IsNullOrWhiteSpace(runtime.User))
+        {
+            builder.AppendLine($"  User: {runtime.User}");
+        }
+        if (!string.IsNullOrWhiteSpace(runtime.FeederId))
+        {
+            builder.AppendLine($"  Feeder ID: {runtime.FeederId}");
+        }
+        if (runtime.MessagesUploaded is int uploaded)
+        {
+            builder.AppendLine($"  Messages uploaded: {uploaded}");
+        }
         if (!string.IsNullOrWhiteSpace(runtime.Target))
         {
             builder.AppendLine($"  Target: {runtime.Target}");

@@ -328,6 +328,7 @@
           <button class="warning" id="hostBtn">Host Check</button>
           <button class="secondary" id="dumpLogBtn">Dump1090 Log</button>
           <button class="secondary" id="beastLogBtn">Beast Log</button>
+          <button class="secondary" id="flightawareLogBtn">FlightAware Log</button>
           <button class="secondary" id="airplanesLogBtn">airplanes.live Log</button>
         </div>
 
@@ -466,6 +467,7 @@
     document.getElementById("hostBtn").addEventListener("click", () => callApi("/api/host-check", "POST"));
     document.getElementById("dumpLogBtn").addEventListener("click", () => callApi("/api/logs/dump1090", "GET"));
     document.getElementById("beastLogBtn").addEventListener("click", () => callApi("/api/logs/beast", "GET"));
+    document.getElementById("flightawareLogBtn").addEventListener("click", () => callApi("/api/logs/flightaware", "GET"));
     document.getElementById("airplanesLogBtn").addEventListener("click", () => callApi("/api/logs/airplanes-live", "GET"));
 
     async function bootstrap() {

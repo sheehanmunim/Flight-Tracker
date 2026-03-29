@@ -124,6 +124,7 @@ app.MapGet("/api/logs/{name}", async (string name) =>
     {
         ["dump1090"] = Path.Combine(repoRoot, "logs", "dump1090.log"),
         ["beast"] = Path.Combine(repoRoot, "logs", "beast-bridge.log"),
+        ["flightaware"] = Path.Combine(repoRoot, "logs", "flightaware.log"),
         ["airplanes-live"] = Path.Combine(repoRoot, "logs", "airplanes-live.log")
     };
 

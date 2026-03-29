@@ -67,10 +67,10 @@ internal static class FeederProfiles
         {
             Id = "flightaware",
             Name = "FlightAware",
-            Badge = "Beast bridge ready",
-            Summary = "Uses the local Beast bridge on port 30005. The data path is ready on this host.",
-            InstallHint = "The host saves the Beast settings here. A native host-side uploader is still pending for this provider.",
-            SourceLabel = "Primary source: Beast on 30005.",
+            Badge = "Native host uploader",
+            Summary = "Uses a native host uploader that logs into FlightAware directly from this machine and caches the returned feeder ID.",
+            InstallHint = "Click Connect On Host and the app will start the FlightAware uploader on this machine with MLAT disabled.",
+            SourceLabel = "External manual source: Beast on 30005. Native host uploader uses the local host feed directly.",
             LocalSettings =
             [
                 new("receiver-type", "relay"),
@@ -87,8 +87,9 @@ internal static class FeederProfiles
             ],
             Notes =
             [
-                "FlightAware expects Beast-format data for external receiver modes.",
-                "The bridge is synthetic-timestamp Beast, so MLAT should stay off."
+                "The native uploader reads the local SBS feed and forwards FlightAware ADEPT messages over TLS.",
+                "The connector caches the returned feeder ID automatically and usually logs in as guest until the feed is claimed.",
+                "Keep MLAT disabled with the current Windows bridge."
             ]
         },
         new FeederProfile
