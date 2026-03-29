@@ -1,194 +1,59 @@
 # Flight Tracker
 
-This project is now intentionally narrow:
+Flight Tracker is a Windows-first RTL-SDR plane tracker with three simple ways to use it:
 
-- plug in one RTL-SDR USB dongle
-- run one start command
-- see nearby planes on a local web page
+- `Windows app`: full desktop launcher for starting the tracker and managing feeders
+- `Browser host`: a lightweight dashboard you run on the Windows machine and open from any browser
+- `Mac client`: a packaged Mac app that opens the shared dashboard from your Windows host
 
-It can also expose local network outputs from `dump1090`, but it is still not a full
-multi-feeder Linux stack.
+## Quick Start
 
-## Start
+1. Plug in the RTL-SDR USB dongle to the Windows computer that will do the tracking.
+2. Pick one way to run it:
 
-1. Plug in your RTL-SDR dongle and antenna.
-2. Use exactly one launcher for the way you want to work:
+- `Windows app`: `Run-FlightTracker-Windows.cmd`
+- `Browser host`: `Run-FlightTracker-Browser.cmd`
+- `Mac client`: `macOS/Run-FlightTracker-Mac.command`
 
-- Windows desktop app: `Run-FlightTracker-Windows.cmd`
-- Browser dashboard host: `Run-FlightTracker-Browser.cmd`
-- Mac client opener: `macOS/Run-FlightTracker-Mac.command`
+3. If you want packaged downloads instead of source launchers, see `docs/DOWNLOADS.md`.
 
-If the map does not open, go to `http://localhost:8080`.
+## Downloads
 
-## What This Uses
+If you are on GitHub and just want the app:
 
-- `vendor/Dump1090/dump1090.exe` for decoding ADS-B
-- Tar1090 for the local aircraft map
-- a small PowerShell wrapper for Windows startup checks
-- a small WinForms launcher app for one-click control on Windows
+- open the repository `Releases` tab
+- download `FlightTracker-Windows.zip` for Windows
+- download `FlightTracker.dmg` for Mac
 
-## Windows App
+Tagged builds now publish release assets automatically from `.github/workflows/build-release-artifacts.yml`.
 
-`Run-FlightTracker-Windows.cmd` launches the Windows desktop app. It builds and launches a small app that can:
+## Best Starting Point
 
-- start the tracker
-- stop the tracker
-- refresh status
-- add feeder profiles for FlightAware, Flightradar24, and airplanes.live
-- connect the native FlightAware and airplanes.live feeders directly from the app
-- open the local map
-- open the feeder guide
-- open logs
+- New user who just wants the app: read `docs/INSTALL.md`
+- Someone downloading release builds: read `docs/DOWNLOADS.md`
+- Someone browsing the repo on GitHub: read `docs/PROJECT-STRUCTURE.md`
+- Someone setting up feeders: read `docs/FEEDING-NETWORKS.md`
 
-If the .NET 8 SDK is not already available, the launcher installs it to
-`%USERPROFILE%\.dotnet` using Microsoft's official `dotnet-install.ps1` script.
+## Repo Layout
 
-## Browser Dashboard
+- `apps/windows/`: Windows launcher source, browser host source, and development launchers
+- `docs/`: install guide, download guide, repo layout, and feeder overview
+- `scripts/`: PowerShell and Python runtime helpers used by the app
+- `vendor/`: bundled SDR and dump1090 binaries
+- `feeders/`: example feeder configuration files
+- `macOS/`: Mac launcher files and DMG builder
+- `releases/`: Windows release-ready package outputs
+- `dist/`: other generated outputs such as local Mac builds
 
-`Run-FlightTracker-Browser.cmd` starts the browser dashboard on port `5099` and opens it with an access key in the URL.
+## Build Packaged Apps
 
-The dashboard can:
+- `Windows`: run `scripts/Package-FlightTracker-Windows.ps1`
+- `Mac`: run `macOS/Build-FlightTracker-MacApp.sh` on a Mac
+- `GitHub`: `.github/workflows/build-release-artifacts.yml` builds artifacts on demand and publishes release downloads on `v*` tags
 
-- start the tracker
-- stop the tracker
-- refresh tracker status
-- add feeder profiles from an `Add Feeder To` dropdown
-- connect or disconnect the native FlightAware and airplanes.live feeders from saved feeder cards
-- run the host check
-- show recent dump1090 and Beast bridge logs
-- show the FlightAware connector log
-- show the airplanes.live connector log
-- open the map on the same host
+The current Windows download artifact is `releases/windows/FlightTracker-Windows.zip`.
 
-Added feeder profiles are saved on the host, so the browser dashboard and the Windows app stay in sync.
+## Notes
 
-It binds to `0.0.0.0:5099`, so you can also open it from another device on your LAN
-if you use the Windows host's IP address and include the same `?key=...` query value.
-
-## Browser USB Note
-
-The browser dashboard does not directly attach the RTL-SDR dongle.
-
-The dongle still has to be plugged into the machine that is actually running the
-decoder. The browser controls that host, but it does not replace the host OS USB layer.
-
-## macOS Launcher
-
-`macOS/Run-FlightTracker-Mac.command` opens the browser dashboard from a Mac.
-
-It is a lightweight launcher for the hosted dashboard, not a native macOS SDR decoder. See `macOS/README.md` for setup.
-Because the Mac client opens the same dashboard, it includes the same `Add Feeder To` UI as the browser host view.
-
-## Native Feeder Control
-
-The host now has real native feeder runtimes for `FlightAware` and `airplanes.live`.
-
-`FlightAware`
-
-- add the `FlightAware` profile in the Windows app or browser dashboard
-- click `Connect On Host`
-- the host logs into `piaware.flightaware.com:1200` over TLS
-- it caches the returned feeder ID automatically in the repo logs directory
-- it uploads SBS-derived aircraft updates from `127.0.0.1:30003`
-
-`airplanes.live`
-
-- add the `airplanes.live` profile in the Windows app or browser dashboard
-- click `Connect On Host`
-- the host opens its own outbound feeder connection to `feed.airplanes.live:30004`
-- the relay reads local Beast data from `127.0.0.1:30005`
-
-Both connectors are controlled from the same Windows app, browser dashboard, and Mac-opened dashboard, so the user does not have to install a separate Linux stack for these providers.
-
-## Feed Outputs
-
-When the tracker is running, this Windows setup exposes:
-
-- `http://localhost:8080` for the local Tar1090 map
-- `127.0.0.1:30002` for AVR/raw TCP output
-- `127.0.0.1:30003` for SBS/BaseStation TCP output
-- `127.0.0.1:30005` for a local Beast bridge fed from `30002`
-
-The Beast bridge uses synthetic 12 MHz timestamps generated on the Windows host.
-That is enough for software that requires Beast framing, but it should not be
-expected to produce useful MLAT results.
-
-## Feeding Other Networks
-
-`Flightradar24`
-
-- This is the one that can use the current Windows output directly.
-- Their support docs say `receiver="avr-tcp"` with `host="127.0.0.1:30002"` is valid, or
-  `receiver="beast-tcp"` with `host="127.0.0.1:30005"` if you have a Beast source.
-
-`FlightAware`
-
-- This repo now includes a native Windows host uploader for FlightAware.
-- It logs into FlightAware directly from this machine, caches the returned feeder ID, and uploads SBS-derived updates from `127.0.0.1:30003`.
-- For external/manual PiAware-style setups, the local Beast bridge on `127.0.0.1:30005` is still available.
-- Keep `allow-mlat no` with this bridge, because the timestamps are synthetic.
-
-`airplanes.live`
-
-- This repo now includes a native Windows host connector for airplanes.live.
-- The connector relays Beast data from `127.0.0.1:30005` to `feed.airplanes.live:30004`.
-- Keep MLAT disabled with this bridge.
-
-## Recommended Path For All Three
-
-If your goal is to feed `FlightAware`, `airplanes.live`, and `Flightradar24` together,
-use a Raspberry Pi or Debian/Ubuntu box as the always-on feeder host and run a
-Beast-capable decoder there, typically `readsb` or `dump1090-fa`.
-
-Use this Windows repo for:
-
-- verifying the dongle works
-- viewing a local map
-- feeding `FlightAware` directly from the built-in native host uploader
-- feeding Beast-only clients from `127.0.0.1:30005`
-- feeding `airplanes.live` directly from the built-in native host connector
-- optionally feeding `Flightradar24` from `127.0.0.1:30002` or `127.0.0.1:30005`
-
-Move to a Linux feeder host for:
-
-- `Flightradar24` alongside the other two from the same Beast source
-
-For a concrete bridge layout and example configs, see `feeders/README.md`.
-
-## Feeder Prerequisite Note
-
-The local Beast bridge is ready on Windows now, and both `FlightAware` and `airplanes.live` can connect natively from this host.
-
-`Flightradar24` still does not have a native host uploader in this repo, so its card currently saves the correct host feed settings instead of opening a first-party uploader connection.
-
-## Troubleshooting
-
-`No RTL-SDR dongle detected`
-
-- Unplug and reconnect the USB dongle.
-- Try another USB port.
-- Run the Windows app or browser dashboard and use the status view to confirm Windows can see the device.
-
-`The SDR is busy`
-
-- Close other SDR apps such as SDR#, dump1090, rtl_test, or Virtual Radar tools.
-- Stop the tracker from the Windows app or browser dashboard, then launch your entrypoint again.
-
-`Port 8080 is already in use`
-
-- Another app is already using the local web port.
-- Open the Windows app or browser dashboard and refresh status to see what is listening.
-
-`The map still does not open`
-
-- Open `http://localhost:8080` manually.
-- Check `logs/dump1090.log` for the last startup error.
-
-## Main Files
-
-- `Run-FlightTracker-Windows.cmd`: the Windows launcher
-- `Run-FlightTracker-Browser.cmd`: the browser dashboard launcher
-- `macOS/Run-FlightTracker-Mac.command`: the Mac opener for the hosted dashboard
-- `dump1090-local.cfg`: local config overrides
-- `feeders/README.md`: optional bridge guide for FlightAware, airplanes.live, and Flightradar24
-- `scripts/*.ps1`: internal start, stop, status, and host-check scripts used by the app and dashboard
+- The browser dashboard and Mac client control the Windows host, but the RTL-SDR dongle still has to be plugged into the Windows machine that runs the decoder.
+- The one remaining fresh-machine setup item on Windows can still be the RTL-SDR driver itself.

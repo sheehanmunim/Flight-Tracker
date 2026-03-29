@@ -5,6 +5,8 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AssemblyName>FlightTracker</AssemblyName>
+    <ApplicationIcon>..\..\..\vendor\Dump1090\src\dump1090.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\Shared\FeederProfiles.cs" Link="Shared\FeederProfiles.cs" />

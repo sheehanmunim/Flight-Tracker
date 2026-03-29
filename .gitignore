@@ -10,6 +10,10 @@ logs/feeder-install-*.log
 logs/feeders.json
 scripts/__pycache__/
 *.pyc
-ui/**/bin/
-ui/**/obj/
+apps/**/bin/
+apps/**/obj/
 macOS/flight-tracker-url.txt
+dist/*
+!dist/README.md
+releases/*
+!releases/README.md

@@ -3,6 +3,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>FlightTrackerDashboard</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\Shared\FeederProfiles.cs" Link="Shared\FeederProfiles.cs" />

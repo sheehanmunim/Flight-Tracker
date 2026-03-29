@@ -5,9 +5,11 @@ using FlightTracker.Shared;
 
 var repoRoot = RepoPaths.FindRepoRoot();
 var dashboardKey = RepoPaths.GetOrCreateDashboardKey(repoRoot);
+var hostOptions = DashboardHostOptions.Parse(args);
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRouting();
+builder.WebHost.UseUrls(hostOptions.ListenUrl);
 
 var app = builder.Build();
 
@@ -145,10 +147,10 @@ app.MapGet("/api/logs/{name}", async (string name) =>
 
 app.MapFallbackToFile("index.html");
 
-var addresses = string.Join(", ", app.Urls.DefaultIfEmpty("http://0.0.0.0:5099"));
-Console.WriteLine($"Flight Tracker dashboard ready. Key: {dashboardKey}");
-Console.WriteLine($"Open: http://localhost:5099/?key={dashboardKey}");
-Console.WriteLine($"Listening on: {addresses}");
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    HostStartupTasks.OnStarted(repoRoot, dashboardKey, hostOptions);
+});
 
 await app.RunAsync();
 
@@ -167,8 +169,11 @@ static class RepoPaths
             var current = start;
             while (current is not null)
             {
-                if (File.Exists(Path.Combine(current.FullName, "Run-FlightTracker-Browser.cmd"))
-                    && File.Exists(Path.Combine(current.FullName, "scripts", "Start-LocalFlightTracker.ps1")))
+                var hasRootMarker = File.Exists(Path.Combine(current.FullName, "flight-tracker-root.marker"));
+                var hasLegacyLauncher = File.Exists(Path.Combine(current.FullName, "Run-FlightTracker-Browser.cmd"));
+                var hasScripts = File.Exists(Path.Combine(current.FullName, "scripts", "Start-LocalFlightTracker.ps1"));
+
+                if (hasScripts && (hasRootMarker || hasLegacyLauncher))
                 {
                     return current.FullName;
                 }
@@ -244,6 +249,87 @@ internal static class ScriptRunner
 }
 
 internal sealed record ScriptResult(bool Ok, string Output, string Error, int ExitCode);
+
+internal sealed record DashboardHostOptions(string ListenUrl, bool OpenBrowser)
+{
+    public int Port => new Uri(ListenUrl).Port;
+
+    public static DashboardHostOptions Parse(string[] args)
+    {
+        const string defaultUrl = "http://0.0.0.0:5099";
+
+        var listenUrl = defaultUrl;
+        var openBrowser = true;
+
+        for (var index = 0; index < args.Length; index++)
+        {
+            var arg = args[index];
+
+            if (string.Equals(arg, "--no-browser", StringComparison.OrdinalIgnoreCase))
+            {
+                openBrowser = false;
+                continue;
+            }
+
+            if (string.Equals(arg, "--urls", StringComparison.OrdinalIgnoreCase) && index + 1 < args.Length)
+            {
+                listenUrl = args[index + 1];
+                index++;
+                continue;
+            }
+
+            if (arg.StartsWith("--urls=", StringComparison.OrdinalIgnoreCase))
+            {
+                listenUrl = arg["--urls=".Length..];
+            }
+        }
+
+        return new DashboardHostOptions(listenUrl, openBrowser);
+    }
+}
+
+internal static class HostStartupTasks
+{
+    public static void OnStarted(string repoRoot, string dashboardKey, DashboardHostOptions options)
+    {
+        var lanHost = FeederProfiles.GetLanHost();
+        var localUrl = $"http://localhost:{options.Port}/?key={dashboardKey}";
+        var lanUrl = $"http://{lanHost}:{options.Port}/?key={dashboardKey}";
+
+        Console.WriteLine($"Flight Tracker dashboard ready. Key: {dashboardKey}");
+        Console.WriteLine($"Open locally: {localUrl}");
+        Console.WriteLine($"Share on your LAN: {lanUrl}");
+
+        try
+        {
+            var macDir = Path.Combine(repoRoot, "macOS");
+            Directory.CreateDirectory(macDir);
+            File.WriteAllText(Path.Combine(macDir, "flight-tracker-url.txt"), $"{lanUrl}{Environment.NewLine}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Could not update the Mac launcher URL file: {ex.Message}");
+        }
+
+        if (!options.OpenBrowser || !OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = localUrl,
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Could not open the dashboard automatically: {ex.Message}");
+        }
+    }
+}
 
 internal static class FeederApi
 {
