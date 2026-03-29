@@ -328,6 +328,7 @@
           <button class="warning" id="hostBtn">Host Check</button>
           <button class="secondary" id="dumpLogBtn">Dump1090 Log</button>
           <button class="secondary" id="beastLogBtn">Beast Log</button>
+          <button class="secondary" id="airplanesLogBtn">airplanes.live Log</button>
         </div>
 
         <div class="small">Access key</div>
@@ -379,7 +380,7 @@
       <div class="feeders-head">
         <div>
           <h2 class="section-title" style="margin-bottom: 4px;">Add Feeder To</h2>
-          <div class="small">Choose a network once, then the host keeps the feeder profile ready across the browser dashboard and the Windows app.</div>
+          <div class="small">Choose a network once, then the host keeps the feeder profile and native connector state ready across the browser dashboard and the Windows app.</div>
         </div>
         <div class="badge" id="lanHostBadge">Loading host...</div>
       </div>
@@ -392,7 +393,7 @@
       </div>
 
       <div class="small" style="margin-top: 12px;">
-        Adding a feeder here saves the provider profile on the host and shows the exact settings that belong to that network.
+        Adding a feeder here saves the provider profile on the host. Native-capable providers can then be connected directly from this card.
       </div>
 
       <div id="feedersGrid" class="feeders-grid"></div>
@@ -465,6 +466,7 @@
     document.getElementById("hostBtn").addEventListener("click", () => callApi("/api/host-check", "POST"));
     document.getElementById("dumpLogBtn").addEventListener("click", () => callApi("/api/logs/dump1090", "GET"));
     document.getElementById("beastLogBtn").addEventListener("click", () => callApi("/api/logs/beast", "GET"));
+    document.getElementById("airplanesLogBtn").addEventListener("click", () => callApi("/api/logs/airplanes-live", "GET"));
 
     async function bootstrap() {
       try {
@@ -491,6 +493,7 @@
 
     async function refreshStatus() {
       await callApi("/api/status", "GET", false);
+      await refreshFeeders();
     }
 
     async function callApi(path, method, showWorking = true) {
@@ -549,8 +552,12 @@
 
       feedersGrid.innerHTML = selected.map(provider => renderProvider(provider)).join("");
 
-      feedersGrid.querySelectorAll("[data-action='install']").forEach(button => {
-        button.addEventListener("click", () => installProvider(button.dataset.providerId));
+      feedersGrid.querySelectorAll("[data-action='connect']").forEach(button => {
+        button.addEventListener("click", () => connectProvider(button.dataset.providerId));
+      });
+
+      feedersGrid.querySelectorAll("[data-action='disconnect']").forEach(button => {
+        button.addEventListener("click", () => disconnectProvider(button.dataset.providerId));
       });
 
       feedersGrid.querySelectorAll("[data-action='copy-local']").forEach(button => {
@@ -578,6 +585,11 @@
           </div>
           <div class="feeder-copy">${escapeHtml(provider.summary)}</div>
           <div class="small" style="margin-bottom: 12px;">${escapeHtml(provider.installHint)}</div>
+          <div class="meta-item" style="margin-bottom: 12px;">
+            <div class="meta-label">Host Connector</div>
+            <div><strong>${escapeHtml(provider.nativeConnector.statusLabel)}</strong></div>
+            <div class="small" style="margin-top: 6px;">${escapeHtml(provider.nativeConnector.summary)}</div>
+          </div>
           <div class="small" style="margin-bottom: 14px;"><strong>${escapeHtml(provider.sourceLabel)}</strong></div>
 
           <div class="feeder-columns">
@@ -594,12 +606,25 @@
           <ul class="feeder-notes">${provider.notes.map(note => `<li>${escapeHtml(note)}</li>`).join("")}</ul>
 
           <div class="feeder-actions">
-            <button class="primary" data-action="install" data-provider-id="${escapeAttribute(provider.id)}">Install Automatically</button>
+            ${renderPrimaryAction(provider)}
             <button class="secondary" data-action="copy-local" data-provider-id="${escapeAttribute(provider.id)}">Copy Same-Host Setup</button>
             <button class="secondary" data-action="copy-lan" data-provider-id="${escapeAttribute(provider.id)}">Copy LAN Setup</button>
             <button class="ghost-button" data-action="remove" data-provider-id="${escapeAttribute(provider.id)}">Remove</button>
           </div>
         </article>`;
+    }
+
+    function renderPrimaryAction(provider) {
+      const runtime = provider.nativeConnector || {};
+      if (!runtime.supportsNativeConnector) {
+        return `<button class="warning" type="button" disabled>${escapeHtml(runtime.primaryActionLabel || "Not Yet Native")}</button>`;
+      }
+
+      if (runtime.canDisconnect) {
+        return `<button class="danger" data-action="disconnect" data-provider-id="${escapeAttribute(provider.id)}">${escapeHtml(runtime.primaryActionLabel || "Disconnect")}</button>`;
+      }
+
+      return `<button class="primary" data-action="connect" data-provider-id="${escapeAttribute(provider.id)}">${escapeHtml(runtime.primaryActionLabel || "Connect On Host")}</button>`;
     }
 
     function renderSettings(settings) {
@@ -631,13 +656,27 @@
       await copyText(lines.join("\n"), `Copied ${provider.name} ${mode === "lan" ? "LAN" : "same-host"} setup.`);
     }
 
-    async function installProvider(providerId) {
+    async function connectProvider(providerId) {
       const provider = findProvider(providerId);
-      render(`Installing ${provider?.name || "feeder"}...`);
+      render(`Connecting ${provider?.name || "feeder"} on this host...`);
 
       try {
-        const payload = await fetchJson(`/api/feeders/${encodeURIComponent(providerId)}/install`, { method: "POST", includeKey: true });
+        const payload = await fetchJson(`/api/feeders/${encodeURIComponent(providerId)}/connect`, { method: "POST", includeKey: true });
         render(formatPayload(payload));
+        await refreshFeeders();
+      } catch (error) {
+        render(error.message);
+      }
+    }
+
+    async function disconnectProvider(providerId) {
+      const provider = findProvider(providerId);
+      render(`Disconnecting ${provider?.name || "feeder"} on this host...`);
+
+      try {
+        const payload = await fetchJson(`/api/feeders/${encodeURIComponent(providerId)}/disconnect`, { method: "POST", includeKey: true });
+        render(formatPayload(payload));
+        await refreshFeeders();
       } catch (error) {
         render(error.message);
       }

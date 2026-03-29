@@ -7,6 +7,15 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $dump1090Path = Join-Path $root "vendor\Dump1090\dump1090.exe"
 $beastBridgePid = Join-Path $root "logs\beast-bridge.pid"
+$nativeFeederScript = Join-Path $root "scripts\Manage-NativeFeeder.ps1"
+
+if (Test-Path -LiteralPath $nativeFeederScript) {
+    try {
+        & powershell.exe -ExecutionPolicy Bypass -File $nativeFeederScript -Provider "airplanes-live" -Action Stop | Out-Null
+    }
+    catch {
+    }
+}
 
 $trackerTargets = Get-CimInstance Win32_Process -Filter "Name = 'dump1090.exe'" -ErrorAction SilentlyContinue |
     Where-Object { $_.ExecutablePath -eq $dump1090Path }

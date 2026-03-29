@@ -335,3 +335,13 @@ if (-not $NoBrowser) {
 Write-Host "Flight tracker is running at $($paths.Url)." -ForegroundColor Green
 Write-Host "Feed outputs: AVR/raw on tcp://127.0.0.1:30002, SBS on tcp://127.0.0.1:30003, Beast on tcp://127.0.0.1:30005."
 Write-Host "The Beast bridge uses synthetic timestamps, so it can help Beast-only feeders but should not be expected to support MLAT."
+
+$nativeFeederScript = Join-Path $paths.Root "scripts\Manage-NativeFeeder.ps1"
+if (Test-Path -LiteralPath $nativeFeederScript) {
+    try {
+        & powershell.exe -ExecutionPolicy Bypass -File $nativeFeederScript -Provider "airplanes-live" -Action Ensure | Out-Null
+    }
+    catch {
+        Write-Host "Native feeder note: $($_.Exception.Message)" -ForegroundColor Yellow
+    }
+}

@@ -71,8 +71,22 @@ app.MapDelete("/api/feeders/{id}", (string id, HttpRequest request) =>
 
 app.MapPost("/api/feeders/{id}/install", async (string id) =>
 {
-    var installScript = Path.Combine(repoRoot, "scripts", "Install-Feeder.ps1");
-    var result = await ScriptRunner.RunPowerShellScriptAsync(repoRoot, installScript, $"-Provider {id}");
+    var nativeFeederScript = Path.Combine(repoRoot, "scripts", "Manage-NativeFeeder.ps1");
+    var result = await ScriptRunner.RunPowerShellScriptAsync(repoRoot, nativeFeederScript, $"-Provider {id} -Action Connect");
+    return Results.Json(result);
+});
+
+app.MapPost("/api/feeders/{id}/connect", async (string id) =>
+{
+    var nativeFeederScript = Path.Combine(repoRoot, "scripts", "Manage-NativeFeeder.ps1");
+    var result = await ScriptRunner.RunPowerShellScriptAsync(repoRoot, nativeFeederScript, $"-Provider {id} -Action Connect");
+    return Results.Json(result);
+});
+
+app.MapPost("/api/feeders/{id}/disconnect", async (string id) =>
+{
+    var nativeFeederScript = Path.Combine(repoRoot, "scripts", "Manage-NativeFeeder.ps1");
+    var result = await ScriptRunner.RunPowerShellScriptAsync(repoRoot, nativeFeederScript, $"-Provider {id} -Action Disconnect");
     return Results.Json(result);
 });
 
@@ -109,7 +123,8 @@ app.MapGet("/api/logs/{name}", async (string name) =>
     var allowed = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
     {
         ["dump1090"] = Path.Combine(repoRoot, "logs", "dump1090.log"),
-        ["beast"] = Path.Combine(repoRoot, "logs", "beast-bridge.log")
+        ["beast"] = Path.Combine(repoRoot, "logs", "beast-bridge.log"),
+        ["airplanes-live"] = Path.Combine(repoRoot, "logs", "airplanes-live.log")
     };
 
     if (!allowed.TryGetValue(name, out var path))
@@ -254,6 +269,7 @@ internal static class FeederApi
                 localSettings = provider.LocalSettings,
                 lanSettings = provider.LanSettings,
                 provider.Notes,
+                nativeConnector = NativeFeederRuntime.Load(repoRoot, provider.Id),
                 selected = selectedIds.Contains(provider.Id)
             }),
             selectedIds = selectedIds.OrderBy(id => id, StringComparer.OrdinalIgnoreCase).ToArray()

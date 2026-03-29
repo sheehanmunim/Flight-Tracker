@@ -6,5 +6,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\Shared\FeederProfiles.cs" Link="Shared\FeederProfiles.cs" />
+    <Compile Include="..\Shared\NativeFeederRuntime.cs" Link="Shared\NativeFeederRuntime.cs" />
   </ItemGroup>
 </Project>

@@ -35,7 +35,7 @@ If the map does not open, go to `http://localhost:8080`.
 - stop the tracker
 - refresh status
 - add feeder profiles for FlightAware, Flightradar24, and airplanes.live
-- run an automatic feeder installer from the app
+- connect the native airplanes.live feeder directly from the app
 - open the local map
 - open the feeder guide
 - open logs
@@ -53,9 +53,10 @@ The dashboard can:
 - stop the tracker
 - refresh tracker status
 - add feeder profiles from an `Add Feeder To` dropdown
-- run an `Install Automatically` action on saved feeder cards
+- connect or disconnect the native airplanes.live feeder from saved feeder cards
 - run the host check
 - show recent dump1090 and Beast bridge logs
+- show the airplanes.live connector log
 - open the map on the same host
 
 Added feeder profiles are saved on the host, so the browser dashboard and the Windows app stay in sync.
@@ -77,15 +78,16 @@ decoder. The browser controls that host, but it does not replace the host OS USB
 It is a lightweight launcher for the hosted dashboard, not a native macOS SDR decoder. See `macOS/README.md` for setup.
 Because the Mac client opens the same dashboard, it includes the same `Add Feeder To` UI as the browser host view.
 
-## Automatic Feeder Install
+## Native Feeder Control
 
-Each saved feeder card now includes an `Install Automatically` action. On Windows, that installer:
+The host now has a real native feeder runtime for `airplanes.live`.
 
-- makes sure the local tracker feed is running first
-- tries to use WSL + Debian as the Linux host for the official feeder packages
-- applies the local feed settings automatically for FlightAware, Flightradar24, and airplanes.live
+- add the `airplanes.live` profile in the Windows app or browser dashboard
+- click `Connect On Host`
+- the host opens its own outbound feeder connection to `feed.airplanes.live:30004`
+- the relay reads local Beast data from `127.0.0.1:30005`
 
-On this PC, the current blocker is still WSL provisioning itself. If Debian is not fully installed yet, the installer now surfaces that directly inside the app/dashboard instead of sending the user to separate docs first.
+That connector is controlled from the same Windows app, browser dashboard, and Mac-opened dashboard, so the user does not have to install a separate Linux stack for this provider.
 
 ## Feed Outputs
 
@@ -117,8 +119,8 @@ expected to produce useful MLAT results.
 
 `airplanes.live`
 
-- The official feed scripts say a decoder such as `readsb` must already be installed.
-- Their setup defaults to `INPUT="127.0.0.1:30005"`, which matches the local Beast bridge here.
+- This repo now includes a native Windows host connector for airplanes.live.
+- The connector relays Beast data from `127.0.0.1:30005` to `feed.airplanes.live:30004`.
 - Keep MLAT disabled with this bridge.
 
 ## Recommended Path For All Three
@@ -132,24 +134,21 @@ Use this Windows repo for:
 - verifying the dongle works
 - viewing a local map
 - feeding Beast-only clients from `127.0.0.1:30005`
+- feeding `airplanes.live` directly from the built-in native host connector
 - optionally feeding `Flightradar24` from `127.0.0.1:30002` or `127.0.0.1:30005`
 
 Move to a Linux feeder host for:
 
 - `FlightAware` via PiAware
-- `airplanes.live` via their official feed scripts
 - `Flightradar24` alongside the other two from the same Beast source
 
 For a concrete bridge layout and example configs, see `feeders/README.md`.
 
 ## Feeder Prerequisite Note
 
-The local Beast bridge is ready on Windows now.
+The local Beast bridge is ready on Windows now, and `airplanes.live` can connect natively from this host.
 
-The remaining blocker for official `FlightAware` and `airplanes.live` feeder-daemon
-installation on this machine is WSL itself: if `wsl --status` reports that the WSL 2
-kernel is missing, repairing or installing the WSL package requires administrator
-privileges before Debian can be installed.
+`FlightAware` and `Flightradar24` still do not have a native host uploader in this repo yet, so their cards currently save the correct host feed settings instead of opening a first-party uploader connection.
 
 ## Troubleshooting
 

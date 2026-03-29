@@ -25,7 +25,7 @@ internal sealed class MainForm : Form
     private readonly string _startScript;
     private readonly string _statusScript;
     private readonly string _stopScript;
-    private readonly string _installFeederScript;
+    private readonly string _nativeFeederScript;
     private readonly string _webLauncher;
     private readonly string _feedersGuide;
     private readonly string _logFile;
@@ -42,7 +42,8 @@ internal sealed class MainForm : Form
     private readonly Button _removeFeederButton;
     private readonly Button _copyLocalFeederButton;
     private readonly Button _copyLanFeederButton;
-    private readonly Button _installFeederButton;
+    private readonly Button _connectFeederButton;
+    private readonly Button _disconnectFeederButton;
     private readonly Label _summaryLabel;
     private readonly Label _feederHostLabel;
     private readonly ComboBox _feederComboBox;
@@ -55,7 +56,7 @@ internal sealed class MainForm : Form
         _startScript = Path.Combine(_repoRoot, "scripts", "Start-LocalFlightTracker.ps1");
         _statusScript = Path.Combine(_repoRoot, "scripts", "Status-LocalFlightTracker.ps1");
         _stopScript = Path.Combine(_repoRoot, "scripts", "Stop-LocalFlightTracker.ps1");
-        _installFeederScript = Path.Combine(_repoRoot, "scripts", "Install-Feeder.ps1");
+        _nativeFeederScript = Path.Combine(_repoRoot, "scripts", "Manage-NativeFeeder.ps1");
         _webLauncher = Path.Combine(_repoRoot, "Run-FlightTracker-Browser.cmd");
         _feedersGuide = Path.Combine(_repoRoot, "feeders", "README.md");
         _logFile = Path.Combine(_repoRoot, "logs", "dump1090.log");
@@ -100,7 +101,8 @@ internal sealed class MainForm : Form
         _removeFeederButton = CreateButton("Remove Feeder", (_, _) => RemoveSelectedFeeder());
         _copyLocalFeederButton = CreateButton("Copy Same-Host Setup", (_, _) => CopySelectedFeederSettings(useLanSettings: false));
         _copyLanFeederButton = CreateButton("Copy LAN Setup", (_, _) => CopySelectedFeederSettings(useLanSettings: true));
-        _installFeederButton = CreateButton("Install Automatically", async (_, _) => await InstallSelectedFeederAsync());
+        _connectFeederButton = CreateButton("Connect On Host", async (_, _) => await ConnectSelectedFeederAsync());
+        _disconnectFeederButton = CreateButton("Disconnect", async (_, _) => await DisconnectSelectedFeederAsync());
 
         var buttonRow = new FlowLayoutPanel
         {
@@ -163,7 +165,8 @@ internal sealed class MainForm : Form
         feederToolbar.Controls.Add(_feederComboBox);
         feederToolbar.Controls.Add(_addFeederButton);
         feederToolbar.Controls.Add(_removeFeederButton);
-        feederToolbar.Controls.Add(_installFeederButton);
+        feederToolbar.Controls.Add(_connectFeederButton);
+        feederToolbar.Controls.Add(_disconnectFeederButton);
         feederToolbar.Controls.Add(_copyLocalFeederButton);
         feederToolbar.Controls.Add(_copyLanFeederButton);
 
@@ -304,6 +307,7 @@ internal sealed class MainForm : Form
         try
         {
             _statusBox.Text = await RunPowerShellAsync(_statusScript);
+            RefreshFeederUi();
         }
         catch (Exception ex)
         {
@@ -444,7 +448,8 @@ internal sealed class MainForm : Form
             return;
         }
 
-        _feederDetailsBox.Text = BuildFeederDetails(provider);
+        var runtime = NativeFeederRuntime.Load(_repoRoot, provider.Id);
+        _feederDetailsBox.Text = BuildFeederDetails(provider, runtime);
         UpdateFeederButtons(true);
     }
 
@@ -489,7 +494,7 @@ internal sealed class MainForm : Form
         }
     }
 
-    private async Task InstallSelectedFeederAsync()
+    private async Task ConnectSelectedFeederAsync()
     {
         if (_feederListBox.SelectedItem is not FeederProfile provider)
         {
@@ -499,8 +504,9 @@ internal sealed class MainForm : Form
         SetButtonsEnabled(false);
         try
         {
-            _statusBox.Text = $"Installing {provider.Name}..." + Environment.NewLine;
-            _statusBox.Text = await RunPowerShellAsync(_installFeederScript, $"-Provider {provider.Id}");
+            _statusBox.Text = $"Connecting {provider.Name} on this host..." + Environment.NewLine;
+            _statusBox.Text = await RunPowerShellAsync(_nativeFeederScript, $"-Provider {provider.Id} -Action Connect");
+            RefreshFeederUi();
         }
         catch (Exception ex)
         {
@@ -512,7 +518,31 @@ internal sealed class MainForm : Form
         }
     }
 
-    private static string BuildFeederDetails(FeederProfile provider)
+    private async Task DisconnectSelectedFeederAsync()
+    {
+        if (_feederListBox.SelectedItem is not FeederProfile provider)
+        {
+            return;
+        }
+
+        SetButtonsEnabled(false);
+        try
+        {
+            _statusBox.Text = $"Disconnecting {provider.Name} on this host..." + Environment.NewLine;
+            _statusBox.Text = await RunPowerShellAsync(_nativeFeederScript, $"-Provider {provider.Id} -Action Disconnect");
+            RefreshFeederUi();
+        }
+        catch (Exception ex)
+        {
+            _statusBox.Text = ex.Message;
+        }
+        finally
+        {
+            SetButtonsEnabled(true);
+        }
+    }
+
+    private static string BuildFeederDetails(FeederProfile provider, NativeFeederRuntimeStatus runtime)
     {
         var builder = new StringBuilder();
         builder.AppendLine(provider.Name);
@@ -521,6 +551,18 @@ internal sealed class MainForm : Form
         builder.AppendLine(provider.Summary);
         builder.AppendLine();
         builder.AppendLine(provider.InstallHint);
+        builder.AppendLine();
+        builder.AppendLine("Host connector:");
+        builder.AppendLine($"  Status: {runtime.StatusLabel}");
+        builder.AppendLine($"  Summary: {runtime.Summary}");
+        if (!string.IsNullOrWhiteSpace(runtime.Target))
+        {
+            builder.AppendLine($"  Target: {runtime.Target}");
+        }
+        if (!string.IsNullOrWhiteSpace(runtime.LastError))
+        {
+            builder.AppendLine($"  Last error: {runtime.LastError}");
+        }
         builder.AppendLine();
         builder.AppendLine(provider.SourceLabel);
         builder.AppendLine();
@@ -573,9 +615,20 @@ internal sealed class MainForm : Form
     {
         _addFeederButton.Enabled = enabled && _feederComboBox.Items.Count > 0;
         _removeFeederButton.Enabled = enabled && _feederListBox.SelectedItem is FeederProfile;
-        _installFeederButton.Enabled = enabled && _feederListBox.SelectedItem is FeederProfile;
         _copyLocalFeederButton.Enabled = enabled && _feederListBox.SelectedItem is FeederProfile;
         _copyLanFeederButton.Enabled = enabled && _feederListBox.SelectedItem is FeederProfile;
+
+        if (_feederListBox.SelectedItem is FeederProfile provider)
+        {
+            var runtime = NativeFeederRuntime.Load(_repoRoot, provider.Id);
+            _connectFeederButton.Enabled = enabled && runtime.CanConnect;
+            _disconnectFeederButton.Enabled = enabled && runtime.CanDisconnect;
+        }
+        else
+        {
+            _connectFeederButton.Enabled = false;
+            _disconnectFeederButton.Enabled = false;
+        }
     }
 
     private static string FindRepoRoot()

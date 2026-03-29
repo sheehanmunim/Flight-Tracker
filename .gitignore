@@ -1,5 +1,10 @@
 logs/beast-bridge.log
 logs/beast-bridge.pid
+logs/*.enabled
+logs/*.pid
+logs/*.status.json
+logs/*.uuid
+logs/*.log
 logs/dashboard.key
 logs/feeder-install-*.log
 logs/feeders.json

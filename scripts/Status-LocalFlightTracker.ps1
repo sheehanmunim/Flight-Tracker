@@ -150,3 +150,18 @@ if ($bridgeLogTail) {
     Write-Host "Recent Beast bridge log output:"
     Write-Host $bridgeLogTail
 }
+
+$nativeStatusScript = Join-Path $paths.Root "scripts\Manage-NativeFeeder.ps1"
+if (Test-Path -LiteralPath $nativeStatusScript) {
+    Write-Host ""
+    Write-Host "Native feeder status:"
+    & powershell.exe -ExecutionPolicy Bypass -File $nativeStatusScript -Provider "airplanes-live" -Action Status
+
+    $airplanesLog = Join-Path $paths.Root "logs\airplanes-live.log"
+    $airplanesTail = Get-RecentLogTail -LogPath $airplanesLog
+    if ($airplanesTail) {
+        Write-Host ""
+        Write-Host "Recent airplanes.live feeder log output:"
+        Write-Host $airplanesTail
+    }
+}

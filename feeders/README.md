@@ -42,7 +42,14 @@ If PiAware is not on the same machine, replace `127.0.0.1` with the Windows host
 
 ## airplanes.live
 
-Their feeder stack expects a Beast source. Point it at:
+This repo now includes a native Windows-side connector for `airplanes.live`.
+
+It relays:
+
+- from `127.0.0.1:30005`
+- to `feed.airplanes.live:30004`
+
+If you want to use their own tooling on another host instead, point it at:
 
 ```text
 INPUT="127.0.0.1:30005"
@@ -52,12 +59,15 @@ Disable MLAT during setup when using this bridge.
 
 ## Scope
 
-This repo provides the local decoder and bridge only.
+This repo provides:
+
+- the local decoder
+- the local Beast bridge
+- a native Windows host connector for `airplanes.live`
 
 It does not install or manage:
 
 - PiAware
-- airplanes.live feeder scripts
 - fr24feed
 - account signup or sharing keys
 

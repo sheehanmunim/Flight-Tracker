@@ -69,7 +69,7 @@ internal static class FeederProfiles
             Name = "FlightAware",
             Badge = "Beast bridge ready",
             Summary = "Uses the local Beast bridge on port 30005. The data path is ready on this host.",
-            InstallHint = "Use PiAware with a Beast TCP source and keep MLAT disabled with this Windows bridge.",
+            InstallHint = "The host saves the Beast settings here. A native host-side uploader is still pending for this provider.",
             SourceLabel = "Primary source: Beast on 30005.",
             LocalSettings =
             [
@@ -95,9 +95,9 @@ internal static class FeederProfiles
         {
             Id = "airplanes-live",
             Name = "airplanes.live",
-            Badge = "Beast bridge ready",
-            Summary = "Uses the same local Beast bridge on port 30005, which matches their existing-receiver path.",
-            InstallHint = "Install the airplanes.live feed client and point it at the Beast bridge with MLAT disabled.",
+            Badge = "Native host connector",
+            Summary = "Uses the local Beast bridge on port 30005 and can now be connected directly from this host.",
+            InstallHint = "Click Connect On Host and the app will start the airplanes.live relay on this machine with MLAT disabled.",
             SourceLabel = "Primary source: Beast on 30005.",
             LocalSettings =
             [
@@ -113,8 +113,8 @@ internal static class FeederProfiles
             ],
             Notes =
             [
-                "Their existing-hardware flow expects a decoder like readsb or dump1090-fa to already exist.",
-                "Use the Beast bridge here and leave MLAT off with the current Windows bridge."
+                "The native host runtime relays Beast data directly to feed.airplanes.live on port 30004.",
+                "Leave MLAT off with the current Windows bridge."
             ]
         }
     ];
