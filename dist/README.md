@@ -4,12 +4,14 @@ This folder is for generated build outputs.
 
 Examples:
 
+- Windows installer EXEs
+- Windows packaged folders and ZIPs
 - Mac app bundles and DMGs
 - other release artifacts created by packaging scripts or CI
 
 Windows packaged downloads now go to:
 
-- `releases/windows/`
+- `dist/windows/`
 
 Why it is mostly ignored:
 
@@ -27,10 +29,7 @@ In this repo, the packaging workflow is:
 
 - `.github/workflows/build-release-artifacts.yml`
 
-The Windows packaging script writes outputs here:
+Packaging scripts:
 
-- `scripts/Package-FlightTracker-Windows.ps1`
-
-The Mac packaging script writes outputs here:
-
+- `Windows/Build-FlightTracker-Windows.ps1`
 - `macOS/Build-FlightTracker-MacApp.sh`

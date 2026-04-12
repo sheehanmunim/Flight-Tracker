@@ -24,17 +24,24 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
       - name: Package Windows app
         shell: pwsh
-        run: ./scripts/Package-FlightTracker-Windows.ps1
+        run: |
+          $version = if ($env:GITHUB_REF -like 'refs/tags/v*') { $env:GITHUB_REF_NAME.TrimStart('v') } else { '1.0.0' }
+          ./Windows/Build-FlightTracker-Windows.ps1 -AppVersion $version
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
           name: FlightTracker-Windows
           path: |
-            releases/windows/FlightTracker
-            releases/windows/FlightTracker-Windows.zip
+            dist/windows/FlightTracker-Setup.exe
+            dist/windows/FlightTracker
+            dist/windows/FlightTracker-Windows.zip
 
   macos:
     runs-on: macos-latest
@@ -83,5 +90,6 @@ jobs:
         with:
           generate_release_notes: true
           files: |
+            release-assets/windows/FlightTracker-Setup.exe
             release-assets/windows/FlightTracker-Windows.zip
             release-assets/macos/FlightTracker.dmg

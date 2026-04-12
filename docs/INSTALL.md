@@ -4,16 +4,22 @@
 
 If you just want to use Flight Tracker and not work inside the repo:
 
-1. Download the Windows ZIP from the latest build or release.
-2. Extract it anywhere you want.
-3. Double-click `Run-FlightTracker-Windows.cmd` or `Desktop\FlightTracker.exe`.
+1. Download `FlightTracker-Setup.exe` from the latest build or release.
+2. Run the installer.
+3. Launch `Flight Tracker` from the Start Menu or desktop shortcut.
 4. Plug the RTL-SDR USB dongle into that same Windows machine.
 
 If you want the browser-host mode instead:
 
-1. Download the same Windows ZIP.
-2. Double-click `Run-FlightTracker-Browser.cmd` or `DashboardHost\FlightTrackerDashboard.exe`.
+1. Install the same Windows app.
+2. Open `Flight Tracker Browser Host` from the Start Menu.
 3. Open the local browser window it launches.
+
+If you want the portable Windows version instead:
+
+1. Download the Windows ZIP.
+2. Extract it anywhere you want.
+3. Double-click `FlightTracker\Desktop\FlightTracker.exe` or `FlightTracker\Run-FlightTracker-Windows.cmd`.
 
 If you want the Mac client:
 

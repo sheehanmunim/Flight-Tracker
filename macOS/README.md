@@ -2,6 +2,10 @@
 
 `Run-FlightTracker-Mac.command` is the simple Mac entrypoint during development.
 
+For packaging from the repo root, use:
+
+- `./Build-FlightTracker-Mac.command`
+
 If you want a real Mac app bundle and DMG, run `Build-FlightTracker-MacApp.sh` on a Mac.
 That script creates:
 

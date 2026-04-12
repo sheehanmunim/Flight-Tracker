@@ -1,13 +1,5 @@
-logs/beast-bridge.log
-logs/beast-bridge.pid
-logs/*.enabled
-logs/*.pid
-logs/*.status.json
-logs/*.uuid
-logs/*.log
-logs/dashboard.key
-logs/feeder-install-*.log
-logs/feeders.json
+logs/*
+!logs/README.md
 scripts/__pycache__/
 *.pyc
 apps/**/bin/
@@ -15,5 +7,3 @@ apps/**/obj/
 macOS/flight-tracker-url.txt
 dist/*
 !dist/README.md
-releases/*
-!releases/README.md
