@@ -3,11 +3,11 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-DIST_DIR="$REPO_ROOT/output/macos"
+BUILD_DIR="$REPO_ROOT/.build/macos"
 APP_NAME="Flight Tracker"
-APP_BUNDLE="$DIST_DIR/$APP_NAME.app"
-DMG_PATH="$DIST_DIR/FlightTracker.dmg"
-DMG_STAGING_DIR="$DIST_DIR/dmg-root"
+APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
+DMG_PATH="$REPO_ROOT/FlightTracker.dmg"
+DMG_STAGING_DIR="$BUILD_DIR/dmg-root"
 
 require_tool() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -30,7 +30,7 @@ set_plist_value() {
 }
 
 rm -rf "$APP_BUNDLE" "$DMG_STAGING_DIR" "$DMG_PATH"
-mkdir -p "$DIST_DIR" "$DMG_STAGING_DIR"
+mkdir -p "$BUILD_DIR" "$DMG_STAGING_DIR"
 
 osacompile -o "$APP_BUNDLE" "$SCRIPT_DIR/FlightTrackerLauncher.applescript"
 

@@ -13,7 +13,6 @@
 - `vendor/`: bundled third-party binaries used by the tracker
 - `feeders/`: feeder examples and templates
 - `macOS/`: Mac launcher assets and DMG builder
-- `output/`: generated build outputs such as the Windows EXE and Mac DMG
 - `logs/`: local runtime output and status files
 
 ## apps/windows
@@ -42,8 +41,7 @@ These are the actual runtime operations the apps call:
 - Push a tag like `v1.0.0`
 - `.github/workflows/build-release-artifacts.yml`: builds the Windows `.exe` and Mac `.dmg`, then publishes the GitHub Release
 
-## output
+## Build Artifacts
 
-- `output/windows/FlightTracker-Setup.exe`: Windows installer output
-- `output/windows/FlightTracker/`: unpacked packaged Windows app folder
-- `output/macos/`: Mac app bundle and DMG outputs
+- `FlightTracker-Setup.exe`: Windows installer output in the repo root
+- `FlightTracker.dmg`: Mac DMG output in the repo root

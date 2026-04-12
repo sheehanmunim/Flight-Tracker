@@ -199,21 +199,27 @@ function Publish-OrCopyBuild {
 }
 
 $repoRoot = Get-AbsolutePath -Path (Join-Path $PSScriptRoot "..")
-$distRoot = if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
-    Join-Path $repoRoot "output\windows"
+$buildRoot = if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
+    Join-Path $repoRoot ".build\windows"
 } else {
     Get-AbsolutePath -Path $OutputRoot
 }
 
-$packageRoot = Join-Path $distRoot "FlightTracker"
+$packageRoot = Join-Path $buildRoot "FlightTracker"
 $desktopRoot = Join-Path $packageRoot "Desktop"
 $dashboardRoot = Join-Path $packageRoot "DashboardHost"
 $logsRoot = Join-Path $packageRoot "logs"
-$setupPath = Join-Path $distRoot "FlightTracker-Setup.exe"
+$setupPath = if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
+    Join-Path $repoRoot "FlightTracker-Setup.exe"
+} else {
+    Join-Path $buildRoot "FlightTracker-Setup.exe"
+}
 $installerScriptPath = Join-Path $PSScriptRoot "FlightTracker-Installer.iss"
+$installerOutputDir = Split-Path -Parent $setupPath
 
-New-Item -ItemType Directory -Path $distRoot -Force | Out-Null
-Reset-Directory -Path $packageRoot -AllowedRoot $distRoot
+New-Item -ItemType Directory -Path $buildRoot -Force | Out-Null
+New-Item -ItemType Directory -Path $installerOutputDir -Force | Out-Null
+Reset-Directory -Path $packageRoot -AllowedRoot $buildRoot
 
 $dotnetSdkAvailable = (Test-DotNetSdkAvailable) -and (-not $PreferExistingBuild.IsPresent)
 
@@ -290,7 +296,7 @@ if ($innoCompiler) {
         -CompilerPath $innoCompiler `
         -InstallerScriptPath $installerScriptPath `
         -SourceDirectory $packageRoot `
-        -OutputDirectory $distRoot `
+        -OutputDirectory $installerOutputDir `
         -Version $AppVersion `
         -OutputBaseFilename "FlightTracker-Setup"
 

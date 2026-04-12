@@ -30,8 +30,7 @@ The Windows build command is:
 
 That creates:
 
-- `output/windows/FlightTracker-Setup.exe`
-- `output/windows/FlightTracker/`
+- `FlightTracker-Setup.exe` in the repo root
 
 ## Mac
 
@@ -41,8 +40,7 @@ The Mac package is built from:
 
 That produces:
 
-- `output/macos/Flight Tracker.app`
-- `output/macos/FlightTracker.dmg` for Mac (Apple Silicon compatible)
+- `FlightTracker.dmg` in the repo root for Mac (Apple Silicon compatible)
 
 ## GitHub Actions
 

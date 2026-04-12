@@ -1,8 +1,9 @@
 logs/*
-!logs/README.md
 scripts/__pycache__/
 *.pyc
 apps/**/bin/
 apps/**/obj/
 macOS/flight-tracker-url.txt
-output/
+.build/
+FlightTracker-Setup.exe
+FlightTracker.dmg

@@ -39,8 +39,7 @@ jobs:
         with:
           name: FlightTracker-Windows
           path: |
-            output/windows/FlightTracker-Setup.exe
-            output/windows/FlightTracker
+            FlightTracker-Setup.exe
 
   macos:
     runs-on: macos-latest
@@ -61,8 +60,7 @@ jobs:
         with:
           name: FlightTracker-Mac
           path: |
-            output/macos/Flight Tracker.app
-            output/macos/FlightTracker.dmg
+            FlightTracker.dmg
 
   release:
     runs-on: ubuntu-latest
