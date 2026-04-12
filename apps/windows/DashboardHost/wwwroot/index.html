@@ -6,167 +6,184 @@
   <title>Flight Tracker Dashboard</title>
   <style>
     :root {
-      --bg: #f7f4ec;
-      --panel: rgba(255,255,255,0.82);
-      --ink: #1f2b24;
-      --muted: #617267;
-      --accent: #0f766e;
-      --accent-2: #b45309;
-      --line: rgba(31,43,36,0.12);
-      --line-strong: rgba(31,43,36,0.22);
-      --shadow: 0 20px 60px rgba(25, 41, 34, 0.12);
-      --terminal: #14211c;
-      --terminal-ink: #d7f2e5;
+      --bg: #e6e6e6;
+      --panel: #ffffff;
+      --ink: #111111;
+      --muted: #555555;
+      --line: #bdbdbd;
+      --line-strong: #777777;
+      --dark: #000000;
+      --light: #f5f5f5;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
+    html,
     body {
       margin: 0;
-      font-family: "Segoe UI", system-ui, sans-serif;
+      min-height: 100%;
+      font-family: "Segoe UI", Arial, sans-serif;
       color: var(--ink);
-      background:
-        radial-gradient(circle at top left, rgba(15,118,110,0.14), transparent 30%),
-        radial-gradient(circle at top right, rgba(180,83,9,0.12), transparent 24%),
-        linear-gradient(160deg, #f5efe0 0%, #f7f4ec 58%, #eef6f4 100%);
+      background: var(--bg);
+    }
+
+    body {
       min-height: 100vh;
     }
 
-    .shell {
-      max-width: 1180px;
-      margin: 0 auto;
-      padding: 28px 20px 40px;
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
     }
 
-    .hero {
-      margin-bottom: 20px;
+    .topbar {
+      background: var(--panel);
+      border-bottom: 2px solid var(--dark);
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: end;
+      flex-wrap: wrap;
     }
 
-    .eyebrow {
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--accent);
+    .title-block h1 {
+      margin: 0;
+      font-size: 1.9rem;
+      line-height: 1.1;
+    }
+
+    .title-block p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      max-width: 760px;
+    }
+
+    .key-box {
+      min-width: 280px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .label {
       font-size: 12px;
       font-weight: 700;
-      margin-bottom: 8px;
-    }
-
-    h1 {
-      margin: 0 0 10px;
-      font-size: clamp(2rem, 5vw, 3.4rem);
-      line-height: 1;
-    }
-
-    .lead {
-      max-width: 860px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
       color: var(--muted);
-      font-size: 1.05rem;
-      line-height: 1.6;
+    }
+
+    .key-row,
+    .control-row,
+    .detail-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    input[type="text"],
+    button {
+      font: inherit;
+      border: 1px solid var(--dark);
+      border-radius: 0;
+      min-height: 40px;
+    }
+
+    input[type="text"] {
+      flex: 1 1 220px;
+      padding: 8px 10px;
+      background: #ffffff;
+      color: var(--ink);
+    }
+
+    button {
+      padding: 8px 14px;
+      background: #ffffff;
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    button.primary {
+      background: var(--dark);
+      color: #ffffff;
+    }
+
+    button.secondary {
+      background: var(--light);
+    }
+
+    button:disabled,
+    input:disabled {
+      opacity: 0.55;
+      cursor: wait;
     }
 
     .layout {
       display: grid;
-      grid-template-columns: 360px 1fr;
-      gap: 18px;
-      margin-bottom: 18px;
+      grid-template-columns: minmax(0, 1.65fr) minmax(320px, 0.95fr);
+      gap: 16px;
+      padding: 16px;
+      align-items: start;
     }
 
     .panel {
       background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(16px);
+      border: 2px solid var(--dark);
     }
 
-    .controls, .status, .feeders {
-      padding: 20px;
-    }
-
-    .section-title {
-      margin: 0 0 12px;
-      font-size: 1.15rem;
-    }
-
-    .button-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-
-    button, select, .ghost-button {
-      appearance: none;
-      border: 0;
-      border-radius: 14px;
-      padding: 12px 14px;
-      font: inherit;
-      transition: transform 140ms ease, opacity 140ms ease, background 140ms ease;
-    }
-
-    button, .ghost-button {
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    button:hover, .ghost-button:hover { transform: translateY(-1px); }
-    button:disabled { opacity: 0.6; cursor: wait; transform: none; }
-    .primary { background: var(--accent); color: white; }
-    .secondary { background: #dbece8; color: var(--ink); }
-    .warning { background: #f7e6cb; color: #7c3f00; }
-    .danger { background: #f4d8d7; color: #7a2222; }
-    .ghost-button {
-      background: rgba(255,255,255,0.7);
-      border: 1px solid var(--line);
-      color: var(--ink);
-    }
-
-    select,
-    input[type="text"] {
-      width: 100%;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,0.92);
-      color: var(--ink);
-    }
-
-    .meta-list {
-      display: grid;
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    .meta-item,
-    .feeder-card {
+    .panel-head {
       padding: 14px 16px;
-      border-radius: 16px;
-      background: rgba(255,255,255,0.76);
-      border: 1px solid var(--line);
+      border-bottom: 1px solid var(--dark);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: start;
+      flex-wrap: wrap;
     }
 
-    .meta-label,
-    .eyebrow-mini {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
+    .panel-head h2,
+    .sidebar-section h2 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    .panel-head p,
+    .sidebar-section p {
+      margin: 6px 0 0;
       color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .status-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--dark);
+      background: #efefef;
+    }
+
+    .status-card {
+      border: 1px solid var(--line-strong);
+      padding: 10px;
+      background: #ffffff;
+    }
+
+    .status-card .label {
       margin-bottom: 4px;
     }
 
-    .callout {
-      margin-top: 16px;
-      padding: 14px 16px;
-      border-radius: 16px;
-      background: linear-gradient(135deg, rgba(15,118,110,0.12), rgba(180,83,9,0.12));
-      border: 1px solid rgba(15,118,110,0.14);
-      color: var(--ink);
-      line-height: 1.5;
+    .status-value {
+      font-size: 0.96rem;
+      font-weight: 700;
     }
 
-    .status-head,
-    .feeders-head,
-    .feeder-topline,
-    .feeder-toolbar,
-    .field-row {
+    .map-toolbar {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--dark);
       display: flex;
       justify-content: space-between;
       gap: 12px;
@@ -174,340 +191,598 @@
       flex-wrap: wrap;
     }
 
-    .map-link {
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 700;
+    .map-frame {
+      aspect-ratio: 16 / 10;
+      min-height: 540px;
+      background: #d9d9d9;
     }
 
-    .terminal {
-      background: var(--terminal);
-      color: var(--terminal-ink);
-      border-radius: 18px;
+    .map-frame iframe {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #d9d9d9;
+    }
+
+    .sidebar {
+      display: grid;
+      gap: 16px;
+    }
+
+    .sidebar-section {
       padding: 16px;
-      min-height: 440px;
-      white-space: pre-wrap;
-      overflow: auto;
-      font-family: Consolas, "SFMono-Regular", monospace;
-      font-size: 13px;
-      line-height: 1.55;
     }
 
-    .small {
-      color: var(--muted);
-      font-size: 0.93rem;
-      line-height: 1.5;
+    .sidebar-section + .sidebar-section {
+      border-top: 1px solid var(--dark);
     }
 
-    .key-box,
-    .add-row {
-      display: flex;
-      gap: 8px;
-      margin: 12px 0 0;
-      align-items: stretch;
-      flex-wrap: wrap;
-    }
-
-    .key-box input,
-    .add-row select {
-      flex: 1 1 240px;
-    }
-
-    .feeders-grid {
+    .feeders-list {
       display: grid;
-      gap: 14px;
-      margin-top: 18px;
+      gap: 10px;
+      margin-top: 14px;
     }
 
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(15,118,110,0.12);
-      color: var(--accent);
+    .provider {
+      border: 1px solid var(--dark);
+      background: #ffffff;
+    }
+
+    .provider.selected {
+      background: #f2f2f2;
+    }
+
+    .provider-main {
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .provider-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .provider-label {
+      display: flex;
+      gap: 10px;
+      align-items: start;
+      font-weight: 700;
+      cursor: pointer;
+      line-height: 1.35;
+    }
+
+    .provider-label input {
+      margin: 2px 0 0;
+    }
+
+    .provider-note,
+    .helper-text {
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 0.94rem;
+    }
+
+    .tag {
+      border: 1px solid var(--dark);
+      padding: 4px 8px;
       font-size: 12px;
       font-weight: 700;
-    }
-
-    .feeder-title {
-      margin: 0;
-      font-size: 1.15rem;
-    }
-
-    .feeder-copy {
-      color: var(--muted);
-      line-height: 1.6;
-      margin: 10px 0 14px;
-    }
-
-    .feeder-columns {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    .field-list {
-      display: grid;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .field-row {
-      padding: 10px 12px;
-      border-radius: 12px;
-      background: rgba(247,244,236,0.88);
-      border: 1px solid rgba(31,43,36,0.08);
-      align-items: flex-start;
-    }
-
-    .field-label {
-      color: var(--muted);
-      font-size: 12px;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      white-space: nowrap;
+      background: #ffffff;
     }
 
-    .field-value {
-      font-family: Consolas, "SFMono-Regular", monospace;
-      font-size: 13px;
+    .provider-details {
+      border-top: 1px solid var(--dark);
+      padding: 12px;
+      display: grid;
+      gap: 12px;
+      background: #ffffff;
+    }
+
+    .detail-block {
+      border: 1px solid var(--line);
+      background: #fafafa;
+    }
+
+    .detail-block h3 {
+      margin: 0;
+      font-size: 0.95rem;
+      padding: 10px 10px 0;
+    }
+
+    .detail-block p {
+      margin: 6px 10px 10px;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 0.94rem;
+    }
+
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .settings-box {
+      border: 1px solid var(--line);
+      background: #ffffff;
+      padding: 10px;
+    }
+
+    .settings-box h4 {
+      margin: 0 0 8px;
+      font-size: 0.92rem;
+    }
+
+    .setting-list {
+      display: grid;
+      gap: 6px;
+      font-size: 0.92rem;
+    }
+
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .setting-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .setting-key {
+      color: var(--muted);
+    }
+
+    .setting-value {
+      font-family: Consolas, "Courier New", monospace;
       text-align: right;
       word-break: break-word;
     }
 
-    .feeder-notes {
+    .notes {
       margin: 0;
-      padding-left: 18px;
+      padding: 0 0 0 18px;
       color: var(--muted);
-      line-height: 1.6;
+      line-height: 1.45;
     }
 
-    .feeder-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 14px;
-      flex-wrap: wrap;
+    .activity {
+      background: #f3f3f3;
+      border: 1px solid var(--dark);
+      padding: 12px;
+      min-height: 180px;
+      white-space: pre-wrap;
+      overflow: auto;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.5;
     }
 
-    .empty-state {
-      padding: 20px;
-      border-radius: 16px;
-      border: 1px dashed var(--line-strong);
-      color: var(--muted);
-      background: rgba(255,255,255,0.45);
-      line-height: 1.6;
+    .link-button {
+      display: inline-block;
+      color: var(--ink);
+      text-decoration: none;
+      border: 1px solid var(--dark);
+      padding: 8px 14px;
+      background: #ffffff;
+      min-height: 40px;
     }
 
-    @media (max-width: 920px) {
-      .layout,
-      .feeder-columns {
+    @media (max-width: 1100px) {
+      .layout {
         grid-template-columns: 1fr;
+      }
+
+      .map-frame {
+        min-height: 420px;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .topbar,
+      .layout {
+        padding: 12px;
+      }
+
+      .status-strip,
+      .settings-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .map-frame {
+        min-height: 340px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="shell">
-    <div class="hero">
-      <div class="eyebrow">Flight Tracker Dashboard</div>
-      <h1>Control the host and add feeders from one place.</h1>
-      <div class="lead">
-        Start, stop, inspect logs, open the aircraft map, and add network feeder profiles from any browser that can reach this host.
-        The dashboard controls the machine running the SDR decoder. It does not directly claim the USB dongle inside the browser.
+  <div class="app">
+    <header class="topbar">
+      <div class="title-block">
+        <h1>Flight Tracker</h1>
+        <p>One screen for the live map and feeder setup. Check the feeders you want and this host will save them right away.</p>
       </div>
-    </div>
 
-    <div class="layout">
-      <section class="panel controls">
-        <h2 class="section-title">Controls</h2>
-        <div class="button-grid">
-          <button class="primary" id="startBtn">Start Tracker</button>
-          <button class="danger" id="stopBtn">Stop Tracker</button>
-          <button class="secondary" id="statusBtn">Refresh Status</button>
-          <button class="warning" id="hostBtn">Host Check</button>
-          <button class="secondary" id="dumpLogBtn">Dump1090 Log</button>
-          <button class="secondary" id="beastLogBtn">Beast Log</button>
-          <button class="secondary" id="flightawareLogBtn">FlightAware Log</button>
-          <button class="secondary" id="airplanesLogBtn">airplanes.live Log</button>
+      <div class="key-box">
+        <div class="label">Access Key</div>
+        <div class="key-row">
+          <input id="keyInput" type="text" placeholder="Paste the dashboard key if needed">
+          <button id="saveKeyBtn" class="secondary" type="button">Save Key</button>
         </div>
+      </div>
+    </header>
 
-        <div class="small">Access key</div>
-        <div class="key-box">
-          <input id="keyInput" type="text" placeholder="Paste the ?key= value here if needed">
-          <button class="secondary" id="saveKeyBtn">Save</button>
-        </div>
-
-        <div class="small" style="margin-top: 14px;">Share URL</div>
-        <div class="key-box">
-          <input id="shareUrlInput" type="text" readonly placeholder="Refresh metadata to populate the share URL">
-          <button class="secondary" id="copyShareBtn">Copy</button>
-        </div>
-
-        <div class="meta-list">
-          <div class="meta-item">
-            <div class="meta-label">Map</div>
-            <div><a id="mapLink" class="map-link" href="#" target="_blank" rel="noreferrer">Open local aircraft map</a></div>
-          </div>
-          <div class="meta-item">
-            <div class="meta-label">Feed Outputs</div>
-            <div>AVR `30002`, SBS `30003`, Beast `30005`.</div>
-          </div>
-          <div class="meta-item">
-            <div class="meta-label">USB</div>
-            <div id="usbNote">Loading...</div>
-          </div>
-        </div>
-
-        <div class="callout">
-          If you are opening this from a Mac, this dashboard talks to the Windows host over HTTP.
-          Plug the RTL-SDR into the host machine that is actually running the tracker.
-        </div>
-      </section>
-
-      <section class="panel status">
-        <div class="status-head">
+    <main class="layout">
+      <section class="panel">
+        <div class="panel-head">
           <div>
-            <h2 class="section-title" style="margin-bottom: 4px;">Status Output</h2>
-            <div class="small">Live script output from the host machine.</div>
+            <h2>Live Map</h2>
+            <p>This is the local aircraft map from the host running the tracker.</p>
           </div>
-          <a id="mapLinkTop" class="map-link" href="#" target="_blank" rel="noreferrer">Open map</a>
+          <a id="mapLink" class="link-button" href="#" target="_blank" rel="noreferrer">Open In New Tab</a>
         </div>
-        <div id="terminal" class="terminal">Loading...</div>
+
+        <div class="status-strip">
+          <div class="status-card">
+            <div class="label">Tracker</div>
+            <div id="trackerStatus" class="status-value">Loading</div>
+          </div>
+          <div class="status-card">
+            <div class="label">LAN Host</div>
+            <div id="lanHostValue" class="status-value">Loading</div>
+          </div>
+          <div class="status-card">
+            <div class="label">Selected Feeders</div>
+            <div id="feederCountValue" class="status-value">0</div>
+          </div>
+        </div>
+
+        <div class="map-toolbar">
+          <div class="control-row">
+            <button id="startBtn" class="primary" type="button">Start Tracker</button>
+            <button id="stopBtn" type="button">Stop Tracker</button>
+            <button id="statusBtn" class="secondary" type="button">Refresh</button>
+          </div>
+          <div class="helper-text" id="usbNote">Loading host details...</div>
+        </div>
+
+        <div class="map-frame">
+          <iframe id="mapFrame" title="Flight Tracker Map" loading="eager"></iframe>
+        </div>
       </section>
-    </div>
 
-    <section class="panel feeders">
-      <div class="feeders-head">
-        <div>
-          <h2 class="section-title" style="margin-bottom: 4px;">Add Feeder To</h2>
-          <div class="small">Choose a network once, then the host keeps the feeder profile and native connector state ready across the browser dashboard and the Windows app.</div>
-        </div>
-        <div class="badge" id="lanHostBadge">Loading host...</div>
-      </div>
+      <aside class="panel sidebar">
+        <section class="sidebar-section">
+          <h2>Feeders</h2>
+          <p>Check a network to add it. FlightAware and airplanes.live try to connect on this computer automatically. Flightradar24 saves the correct host settings for its feeder app.</p>
+          <div id="feedersList" class="feeders-list"></div>
+        </section>
 
-      <div class="add-row">
-        <select id="providerSelect">
-          <option value="">Loading feeders...</option>
-        </select>
-        <button class="primary" id="addFeederBtn">Add Feeder</button>
-      </div>
-
-      <div class="small" style="margin-top: 12px;">
-        Adding a feeder here saves the provider profile on the host. Native-capable providers can then be connected directly from this card.
-      </div>
-
-      <div id="feedersGrid" class="feeders-grid"></div>
-    </section>
+        <section class="sidebar-section">
+          <h2>Activity</h2>
+          <p>The latest host action or status result shows here.</p>
+          <div id="activity" class="activity">Loading...</div>
+        </section>
+      </aside>
+    </main>
   </div>
 
   <script>
-    const terminal = document.getElementById("terminal");
     const keyInput = document.getElementById("keyInput");
     const saveKeyBtn = document.getElementById("saveKeyBtn");
     const mapLink = document.getElementById("mapLink");
-    const mapLinkTop = document.getElementById("mapLinkTop");
+    const mapFrame = document.getElementById("mapFrame");
     const usbNote = document.getElementById("usbNote");
-    const shareUrlInput = document.getElementById("shareUrlInput");
-    const copyShareBtn = document.getElementById("copyShareBtn");
-    const providerSelect = document.getElementById("providerSelect");
-    const addFeederBtn = document.getElementById("addFeederBtn");
-    const feedersGrid = document.getElementById("feedersGrid");
-    const lanHostBadge = document.getElementById("lanHostBadge");
+    const trackerStatus = document.getElementById("trackerStatus");
+    const lanHostValue = document.getElementById("lanHostValue");
+    const feederCountValue = document.getElementById("feederCountValue");
+    const feedersList = document.getElementById("feedersList");
+    const activity = document.getElementById("activity");
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const statusBtn = document.getElementById("statusBtn");
 
     const params = new URLSearchParams(window.location.search);
     const storedKey = window.localStorage.getItem("flight-tracker-dashboard-key") || "";
     const queryKey = params.get("key") || "";
     let dashboardKey = queryKey || storedKey;
-    let feederState = { providers: [], selectedIds: [] };
-    keyInput.value = dashboardKey;
+    let feederState = { providers: [], selectedIds: [], lanHost: window.location.hostname };
+    let metaState = { lanUrl: "", mapUrl: "", usbNote: "" };
+    let refreshHandle = 0;
+    let uiBusy = false;
 
-    const mapUrl = `${window.location.protocol}//${window.location.hostname}:8080`;
-    mapLink.href = mapUrl;
-    mapLinkTop.href = mapUrl;
+    if (dashboardKey) {
+      window.localStorage.setItem("flight-tracker-dashboard-key", dashboardKey);
+    }
+
+    keyInput.value = dashboardKey;
 
     saveKeyBtn.addEventListener("click", async () => {
       dashboardKey = keyInput.value.trim();
       window.localStorage.setItem("flight-tracker-dashboard-key", dashboardKey);
-      render("Saved key locally. Refreshing...");
+      renderActivity("Saved access key. Reloading dashboard data...");
       await bootstrap();
     });
 
-    copyShareBtn.addEventListener("click", async () => {
-      const value = shareUrlInput.value.trim();
-      if (!value) {
-        render("Refresh metadata first so the share URL is available.");
-        return;
-      }
-
-      await copyText(value, "Copied the share URL to the clipboard.");
+    startBtn.addEventListener("click", async () => {
+      await runHostAction("/api/start", "POST", "Starting tracker...");
     });
 
-    addFeederBtn.addEventListener("click", async () => {
-      const providerId = providerSelect.value;
-      if (!providerId) {
-        render("Choose a feeder network from the dropdown first.");
-        return;
-      }
-
-      render("Adding feeder profile...");
-
-      try {
-        feederState = await fetchJson(`/api/feeders/${encodeURIComponent(providerId)}`, { method: "POST", includeKey: true });
-        render(`Added ${findProvider(providerId)?.name || "feeder"}.\n\nThe host saved that provider profile and it is now available in this dashboard and the Windows app.`);
-        renderFeeders();
-      } catch (error) {
-        render(error.message);
-      }
+    stopBtn.addEventListener("click", async () => {
+      await runHostAction("/api/stop", "POST", "Stopping tracker...");
     });
 
-    document.getElementById("startBtn").addEventListener("click", () => callApi("/api/start", "POST"));
-    document.getElementById("stopBtn").addEventListener("click", () => callApi("/api/stop", "POST"));
-    document.getElementById("statusBtn").addEventListener("click", () => refreshStatus());
-    document.getElementById("hostBtn").addEventListener("click", () => callApi("/api/host-check", "POST"));
-    document.getElementById("dumpLogBtn").addEventListener("click", () => callApi("/api/logs/dump1090", "GET"));
-    document.getElementById("beastLogBtn").addEventListener("click", () => callApi("/api/logs/beast", "GET"));
-    document.getElementById("flightawareLogBtn").addEventListener("click", () => callApi("/api/logs/flightaware", "GET"));
-    document.getElementById("airplanesLogBtn").addEventListener("click", () => callApi("/api/logs/airplanes-live", "GET"));
+    statusBtn.addEventListener("click", async () => {
+      await refreshStatus(true);
+    });
 
     async function bootstrap() {
+      clearInterval(refreshHandle);
+
       try {
-        const meta = await fetchJson("/api/meta", { includeKey: true });
-        usbNote.textContent = meta.usbNote;
-        shareUrlInput.value = meta.lanUrl || "";
-      } catch {
-        usbNote.textContent = "Unable to load dashboard metadata. Save the access key first if needed.";
+        await loadMeta();
+        await refreshFeeders();
+        await refreshStatus(false);
+      } catch (error) {
+        renderActivity(error.message);
       }
 
-      await refreshFeeders();
-      await refreshStatus();
-      window.setInterval(refreshStatus, 15000);
+      refreshHandle = window.setInterval(async () => {
+        if (!uiBusy) {
+          await refreshStatus(false);
+        }
+      }, 15000);
+    }
+
+    async function loadMeta() {
+      const fallbackMapUrl = `${window.location.protocol}//${window.location.hostname}:8080`;
+
+      try {
+        const meta = await fetchJson("/api/meta", { includeKey: true });
+        metaState = meta;
+        usbNote.textContent = meta.usbNote || "Host details unavailable.";
+        mapLink.href = meta.mapUrl || fallbackMapUrl;
+        mapFrame.src = meta.mapUrl || fallbackMapUrl;
+      } catch (error) {
+        metaState = { lanUrl: "", mapUrl: fallbackMapUrl, usbNote: "" };
+        usbNote.textContent = "Save the access key if the host details do not load.";
+        mapLink.href = fallbackMapUrl;
+        mapFrame.src = fallbackMapUrl;
+        throw error;
+      }
     }
 
     async function refreshFeeders() {
+      feederState = await fetchJson("/api/feeders", { includeKey: true });
+      feederCountValue.textContent = String((feederState.selectedIds || []).length);
+      lanHostValue.textContent = feederState.lanHost || window.location.hostname;
+      renderFeeders();
+    }
+
+    async function refreshStatus(showMessage) {
       try {
-        feederState = await fetchJson("/api/feeders", { includeKey: true });
-        renderFeeders();
+        const payload = await fetchJson("/api/status", { includeKey: true });
+        trackerStatus.textContent = summarizeTracker(payload.output || payload.error || "");
+
+        if (showMessage) {
+          renderActivity(formatPayload(payload));
+        }
+
+        await refreshFeeders();
       } catch (error) {
-        feedersGrid.innerHTML = `<div class="empty-state">${escapeHtml(error.message)}</div>`;
+        trackerStatus.textContent = "Unavailable";
+        if (showMessage) {
+          renderActivity(error.message);
+        }
       }
     }
 
-    async function refreshStatus() {
-      await callApi("/api/status", "GET", false);
-      await refreshFeeders();
-    }
-
-    async function callApi(path, method, showWorking = true) {
-      if (showWorking) {
-        render("Working...");
-      }
+    async function runHostAction(path, method, workingMessage) {
+      renderActivity(workingMessage);
+      setBusy(true);
 
       try {
         const payload = await fetchJson(path, { method, includeKey: true });
-        render(formatPayload(payload));
+        renderActivity(formatPayload(payload));
+        await refreshFeeders();
+        await refreshStatus(false);
       } catch (error) {
-        render(error.message);
+        renderActivity(error.message);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    function renderFeeders() {
+      const providers = [...(feederState.providers || [])].sort((left, right) => {
+        if (left.selected && !right.selected) return -1;
+        if (!left.selected && right.selected) return 1;
+        return left.name.localeCompare(right.name);
+      });
+
+      if (!providers.length) {
+        feedersList.innerHTML = "<div class='helper-text'>No feeder providers are available.</div>";
+        return;
+      }
+
+      feedersList.innerHTML = providers.map(renderProvider).join("");
+
+      feedersList.querySelectorAll("[data-provider-toggle]").forEach((input) => {
+        input.addEventListener("change", async (event) => {
+          const checkbox = event.currentTarget;
+          await toggleProvider(checkbox.dataset.providerId, checkbox.checked);
+        });
+      });
+
+      feedersList.querySelectorAll("[data-copy-mode]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          await copyProvider(button.dataset.providerId, button.dataset.copyMode);
+        });
+      });
+
+      feedersList.querySelectorAll("[data-connect-provider]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          await connectProvider(button.dataset.providerId);
+        });
+      });
+    }
+
+    function renderProvider(provider) {
+      const tagText = provider.nativeConnector?.supportsNativeConnector ? "Automatic" : "Manual Setup";
+
+      return `
+        <article class="provider ${provider.selected ? "selected" : ""}">
+          <div class="provider-main">
+            <div class="provider-top">
+              <label class="provider-label">
+                <input
+                  type="checkbox"
+                  data-provider-toggle
+                  data-provider-id="${escapeAttribute(provider.id)}"
+                  ${provider.selected ? "checked" : ""}>
+                <span>${escapeHtml(provider.name)}</span>
+              </label>
+              <div class="tag">${escapeHtml(tagText)}</div>
+            </div>
+            <div class="provider-note">${escapeHtml(provider.summary)}</div>
+            ${provider.selected ? renderProviderDetails(provider) : ""}
+          </div>
+        </article>`;
+    }
+
+    function renderProviderDetails(provider) {
+      const runtime = provider.nativeConnector || {};
+      const connectButton = runtime.supportsNativeConnector && !runtime.enabled
+        ? `<button type="button" class="primary" data-connect-provider data-provider-id="${escapeAttribute(provider.id)}">Connect Now</button>`
+        : "";
+
+      return `
+        <div class="provider-details">
+          <div class="detail-block">
+            <h3>Status</h3>
+            <p><strong>${escapeHtml(runtime.statusLabel || "Saved")}</strong><br>${escapeHtml(runtime.summary || provider.installHint || "")}</p>
+          </div>
+
+          <div class="settings-grid">
+            <div class="settings-box">
+              <h4>Same Computer</h4>
+              <div class="setting-list">${renderSettings(provider.localSettings || [])}</div>
+            </div>
+            <div class="settings-box">
+              <h4>Another Device</h4>
+              <div class="setting-list">${renderSettings(provider.lanSettings || [])}</div>
+            </div>
+          </div>
+
+          <div class="detail-actions">
+            ${connectButton}
+            <button type="button" class="secondary" data-copy-mode="local" data-provider-id="${escapeAttribute(provider.id)}">Copy Same Computer</button>
+            <button type="button" class="secondary" data-copy-mode="lan" data-provider-id="${escapeAttribute(provider.id)}">Copy Another Device</button>
+          </div>
+
+          <ul class="notes">
+            ${(provider.notes || []).map((note) => `<li>${escapeHtml(note)}</li>`).join("")}
+          </ul>
+        </div>`;
+    }
+
+    function renderSettings(settings) {
+      return settings.map((setting) => `
+        <div class="setting-row">
+          <div class="setting-key">${escapeHtml(setting.label)}</div>
+          <div class="setting-value">${escapeHtml(setting.value)}</div>
+        </div>`).join("");
+    }
+
+    async function toggleProvider(providerId, selected) {
+      const provider = findProvider(providerId);
+      const providerName = provider?.name || "feeder";
+
+      setBusy(true);
+
+      try {
+        if (selected) {
+          renderActivity(`Adding ${providerName}...`);
+          feederState = await fetchJson(`/api/feeders/${encodeURIComponent(providerId)}`, { method: "POST", includeKey: true });
+
+          const savedProvider = findProvider(providerId);
+          if (savedProvider?.nativeConnector?.supportsNativeConnector && !savedProvider.nativeConnector.enabled) {
+            renderActivity(`Adding ${providerName}...\n\nTrying to connect it on this computer...`);
+            const payload = await fetchJson(`/api/feeders/${encodeURIComponent(providerId)}/connect`, { method: "POST", includeKey: true });
+            renderActivity(formatPayload(payload));
+          } else if (savedProvider?.nativeConnector?.supportsNativeConnector) {
+            renderActivity(`${providerName} is already connected on this computer.`);
+          } else {
+            renderActivity(`${providerName} was added. Use the settings shown on the card if its own feeder app needs them.`);
+          }
+        } else {
+          renderActivity(`Removing ${providerName}...`);
+
+          if (provider?.nativeConnector?.supportsNativeConnector && provider.nativeConnector.enabled) {
+            await fetchJson(`/api/feeders/${encodeURIComponent(providerId)}/disconnect`, { method: "POST", includeKey: true });
+          }
+
+          feederState = await fetchJson(`/api/feeders/${encodeURIComponent(providerId)}`, { method: "DELETE", includeKey: true });
+          renderActivity(`${providerName} was removed.`);
+        }
+
+        await refreshFeeders();
+        await refreshStatus(false);
+      } catch (error) {
+        renderActivity(error.message);
+        await refreshFeeders();
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function connectProvider(providerId) {
+      const provider = findProvider(providerId);
+      const providerName = provider?.name || "feeder";
+
+      setBusy(true);
+      renderActivity(`Connecting ${providerName} on this computer...`);
+
+      try {
+        const payload = await fetchJson(`/api/feeders/${encodeURIComponent(providerId)}/connect`, { method: "POST", includeKey: true });
+        renderActivity(formatPayload(payload));
+        await refreshFeeders();
+        await refreshStatus(false);
+      } catch (error) {
+        renderActivity(error.message);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function copyProvider(providerId, mode) {
+      const provider = findProvider(providerId);
+      if (!provider) {
+        renderActivity("Could not find that feeder.");
+        return;
+      }
+
+      const settings = mode === "lan" ? provider.lanSettings : provider.localSettings;
+      const lines = [
+        provider.name,
+        "",
+        ...settings.map((setting) => `${setting.label}: ${setting.value}`)
+      ];
+
+      try {
+        await navigator.clipboard.writeText(lines.join("\n"));
+        renderActivity(`Copied ${provider.name} ${mode === "lan" ? "another-device" : "same-computer"} settings.`);
+      } catch {
+        renderActivity("Clipboard copy failed. You can still read the settings on screen.");
       }
     }
 
@@ -524,204 +799,65 @@
 
       if (!response.ok) {
         const text = await response.text();
-        throw new Error(text || `Request failed with ${response.status}`);
+        throw new Error(parseErrorText(text, response.status));
       }
 
       return await response.json();
     }
 
-    function renderFeeders() {
-      const providers = feederState.providers || [];
-      const available = providers.filter(provider => !provider.selected);
-      const selected = providers.filter(provider => provider.selected);
-
-      lanHostBadge.textContent = `LAN host: ${feederState.lanHost || window.location.hostname}`;
-
-      providerSelect.innerHTML = available.length
-        ? available.map(provider => `<option value="${escapeAttribute(provider.id)}">${escapeHtml(provider.name)}</option>`).join("")
-        : '<option value="">All feeder profiles added</option>';
-
-      providerSelect.disabled = available.length === 0;
-      addFeederBtn.disabled = available.length === 0;
-
-      if (!selected.length) {
-        feedersGrid.innerHTML = `
-          <div class="empty-state">
-            No feeder profiles added yet. Pick a network above and the host will save the matching connection details for you.
-          </div>`;
-        return;
+    function parseErrorText(text, status) {
+      if (!text) {
+        return `Request failed with ${status}.`;
       }
-
-      feedersGrid.innerHTML = selected.map(provider => renderProvider(provider)).join("");
-
-      feedersGrid.querySelectorAll("[data-action='connect']").forEach(button => {
-        button.addEventListener("click", () => connectProvider(button.dataset.providerId));
-      });
-
-      feedersGrid.querySelectorAll("[data-action='disconnect']").forEach(button => {
-        button.addEventListener("click", () => disconnectProvider(button.dataset.providerId));
-      });
-
-      feedersGrid.querySelectorAll("[data-action='copy-local']").forEach(button => {
-        button.addEventListener("click", () => copyProvider(button.dataset.providerId, "local"));
-      });
-
-      feedersGrid.querySelectorAll("[data-action='copy-lan']").forEach(button => {
-        button.addEventListener("click", () => copyProvider(button.dataset.providerId, "lan"));
-      });
-
-      feedersGrid.querySelectorAll("[data-action='remove']").forEach(button => {
-        button.addEventListener("click", () => removeProvider(button.dataset.providerId));
-      });
-    }
-
-    function renderProvider(provider) {
-      return `
-        <article class="feeder-card">
-          <div class="feeder-topline">
-            <div>
-              <div class="eyebrow-mini">Feeder Profile</div>
-              <h3 class="feeder-title">${escapeHtml(provider.name)}</h3>
-            </div>
-            <div class="badge">${escapeHtml(provider.badge)}</div>
-          </div>
-          <div class="feeder-copy">${escapeHtml(provider.summary)}</div>
-          <div class="small" style="margin-bottom: 12px;">${escapeHtml(provider.installHint)}</div>
-          <div class="meta-item" style="margin-bottom: 12px;">
-            <div class="meta-label">Host Connector</div>
-            <div><strong>${escapeHtml(provider.nativeConnector.statusLabel)}</strong></div>
-            <div class="small" style="margin-top: 6px;">${escapeHtml(provider.nativeConnector.summary)}</div>
-          </div>
-          <div class="small" style="margin-bottom: 14px;"><strong>${escapeHtml(provider.sourceLabel)}</strong></div>
-
-          <div class="feeder-columns">
-            <div class="meta-item">
-              <div class="meta-label">Same Host</div>
-              <div class="field-list">${renderSettings(provider.localSettings)}</div>
-            </div>
-            <div class="meta-item">
-              <div class="meta-label">From Another Device</div>
-              <div class="field-list">${renderSettings(provider.lanSettings)}</div>
-            </div>
-          </div>
-
-          <ul class="feeder-notes">${provider.notes.map(note => `<li>${escapeHtml(note)}</li>`).join("")}</ul>
-
-          <div class="feeder-actions">
-            ${renderPrimaryAction(provider)}
-            <button class="secondary" data-action="copy-local" data-provider-id="${escapeAttribute(provider.id)}">Copy Same-Host Setup</button>
-            <button class="secondary" data-action="copy-lan" data-provider-id="${escapeAttribute(provider.id)}">Copy LAN Setup</button>
-            <button class="ghost-button" data-action="remove" data-provider-id="${escapeAttribute(provider.id)}">Remove</button>
-          </div>
-        </article>`;
-    }
-
-    function renderPrimaryAction(provider) {
-      const runtime = provider.nativeConnector || {};
-      if (!runtime.supportsNativeConnector) {
-        return `<button class="warning" type="button" disabled>${escapeHtml(runtime.primaryActionLabel || "Not Yet Native")}</button>`;
-      }
-
-      if (runtime.canDisconnect) {
-        return `<button class="danger" data-action="disconnect" data-provider-id="${escapeAttribute(provider.id)}">${escapeHtml(runtime.primaryActionLabel || "Disconnect")}</button>`;
-      }
-
-      return `<button class="primary" data-action="connect" data-provider-id="${escapeAttribute(provider.id)}">${escapeHtml(runtime.primaryActionLabel || "Connect On Host")}</button>`;
-    }
-
-    function renderSettings(settings) {
-      return settings.map(setting => `
-        <div class="field-row">
-          <div class="field-label">${escapeHtml(setting.label)}</div>
-          <div class="field-value">${escapeHtml(setting.value)}</div>
-        </div>`).join("");
-    }
-
-    async function copyProvider(providerId, mode) {
-      const provider = findProvider(providerId);
-      if (!provider) {
-        render("Unable to find that feeder profile.");
-        return;
-      }
-
-      const settings = mode === "lan" ? provider.lanSettings : provider.localSettings;
-      const lines = [
-        provider.name,
-        "",
-        provider.summary,
-        "",
-        ...settings.map(setting => `${setting.label}: ${setting.value}`),
-        "",
-        ...provider.notes
-      ];
-
-      await copyText(lines.join("\n"), `Copied ${provider.name} ${mode === "lan" ? "LAN" : "same-host"} setup.`);
-    }
-
-    async function connectProvider(providerId) {
-      const provider = findProvider(providerId);
-      render(`Connecting ${provider?.name || "feeder"} on this host...`);
 
       try {
-        const payload = await fetchJson(`/api/feeders/${encodeURIComponent(providerId)}/connect`, { method: "POST", includeKey: true });
-        render(formatPayload(payload));
-        await refreshFeeders();
-      } catch (error) {
-        render(error.message);
-      }
-    }
-
-    async function disconnectProvider(providerId) {
-      const provider = findProvider(providerId);
-      render(`Disconnecting ${provider?.name || "feeder"} on this host...`);
-
-      try {
-        const payload = await fetchJson(`/api/feeders/${encodeURIComponent(providerId)}/disconnect`, { method: "POST", includeKey: true });
-        render(formatPayload(payload));
-        await refreshFeeders();
-      } catch (error) {
-        render(error.message);
-      }
-    }
-
-    async function removeProvider(providerId) {
-      render("Removing feeder profile...");
-
-      try {
-        feederState = await fetchJson(`/api/feeders/${encodeURIComponent(providerId)}`, { method: "DELETE", includeKey: true });
-        render(`Removed ${findProvider(providerId)?.name || "feeder"} from the saved host profiles.`);
-        renderFeeders();
-      } catch (error) {
-        render(error.message);
-      }
-    }
-
-    async function copyText(value, successMessage) {
-      try {
-        await navigator.clipboard.writeText(value);
-        render(successMessage);
+        const parsed = JSON.parse(text);
+        if (parsed.error) {
+          return parsed.error;
+        }
       } catch {
-        render("Unable to copy automatically. Copy it manually from the card.");
       }
+
+      return text;
     }
 
-    function findProvider(providerId) {
-      return (feederState.providers || []).find(provider => provider.id === providerId) || null;
+    function summarizeTracker(text) {
+      if (text.includes("Tracker process : running")) {
+        return "Running";
+      }
+
+      if (text.includes("Tracker process : not running")) {
+        return "Stopped";
+      }
+
+      return "Check Status";
     }
 
     function formatPayload(payload) {
       if (payload.output || payload.error) {
-        const bits = [];
-        if (payload.output) bits.push(payload.output);
-        if (payload.error) bits.push(payload.error);
-        return bits.join("\n\n");
+        const parts = [];
+        if (payload.output) parts.push(payload.output);
+        if (payload.error) parts.push(payload.error);
+        return parts.join("\n\n");
       }
 
       return JSON.stringify(payload, null, 2);
     }
 
-    function render(text) {
-      terminal.textContent = text || "(no output)";
+    function findProvider(providerId) {
+      return (feederState.providers || []).find((provider) => provider.id === providerId) || null;
+    }
+
+    function renderActivity(text) {
+      activity.textContent = text || "(no output)";
+    }
+
+    function setBusy(value) {
+      uiBusy = value;
+      document.querySelectorAll("button, input[type='checkbox']").forEach((element) => {
+        element.disabled = value;
+      });
+      keyInput.disabled = value;
     }
 
     function escapeHtml(value) {
