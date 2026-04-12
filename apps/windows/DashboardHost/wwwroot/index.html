@@ -84,6 +84,24 @@
       flex-wrap: wrap;
     }
 
+    .claim-box {
+      border: 1px solid var(--line);
+      background: #ffffff;
+      padding: 10px;
+    }
+
+    .claim-box h4 {
+      margin: 0 0 6px;
+      font-size: 0.92rem;
+    }
+
+    .claim-box p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 0.94rem;
+    }
+
     input[type="text"],
     button {
       font: inherit;
@@ -683,6 +701,8 @@
             </div>
           </div>
 
+          ${renderAccountBox(provider)}
+
           <div class="detail-actions">
             ${connectButton}
             <button type="button" class="secondary" data-copy-mode="local" data-provider-id="${escapeAttribute(provider.id)}">Copy Same Computer</button>
@@ -692,6 +712,30 @@
           <ul class="notes">
             ${(provider.notes || []).map((note) => `<li>${escapeHtml(note)}</li>`).join("")}
           </ul>
+        </div>`;
+    }
+
+    function renderAccountBox(provider) {
+      if (provider.id !== "flightaware") {
+        return "";
+      }
+
+      const runtime = provider.nativeConnector || {};
+      const claimUrl = runtime.feederId
+        ? `https://flightaware.com/adsb/piaware/claim/${encodeURIComponent(runtime.feederId)}`
+        : "https://flightaware.com/adsb/piaware/claim";
+      const claimLabel = runtime.feederId ? "Open Claim Page" : "Open FlightAware Claim";
+      const claimCopy = runtime.feederId
+        ? `Sign into your FlightAware account in the browser, then open the claim page for feeder ID ${escapeHtml(runtime.feederId)}.`
+        : "Connect the feeder first, then sign into FlightAware and claim it in the browser.";
+
+      return `
+        <div class="claim-box">
+          <h4>FlightAware Account</h4>
+          <p>${claimCopy}</p>
+          <div class="detail-actions" style="margin-top: 10px;">
+            <a class="link-button" href="${escapeAttribute(claimUrl)}" target="_blank" rel="noreferrer">${claimLabel}</a>
+          </div>
         </div>`;
     }
 
