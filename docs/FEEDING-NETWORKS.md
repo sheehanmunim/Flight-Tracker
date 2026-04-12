@@ -8,7 +8,6 @@ Flight Tracker can save or manage feeder settings for:
 
 For the full bridge notes and example configs, see:
 
-- `feeders/README.md`
 - `feeders/piaware.conf.example`
 - `feeders/fr24feed.ini.example`
 

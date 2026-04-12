@@ -36,7 +36,6 @@ These are the actual runtime operations the apps call:
 
 - `Build-FlightTracker-Windows.ps1`: Windows packaging script
 - `FlightTracker-Installer.iss`: Windows installer definition
-- `README.md`: notes about Windows packaging outputs
 
 ## Release Flow
 

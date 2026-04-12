@@ -47,7 +47,7 @@ fi
 
 cp -R "$APP_BUNDLE" "$DMG_STAGING_DIR/"
 ln -s /Applications "$DMG_STAGING_DIR/Applications"
-cp "$SCRIPT_DIR/README.md" "$DMG_STAGING_DIR/README.md"
+cp "$REPO_ROOT/README.md" "$DMG_STAGING_DIR/README.md"
 
 hdiutil create -volname "$APP_NAME" -srcfolder "$DMG_STAGING_DIR" -ov -format UDZO "$DMG_PATH"
 
