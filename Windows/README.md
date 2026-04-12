@@ -18,8 +18,8 @@ Source launchers live at the repo root:
 
 Generated Windows download outputs go to:
 
-- `dist/windows/FlightTracker-Setup.exe`
-- `dist/windows/FlightTracker/`
+- `output/windows/FlightTracker-Setup.exe`
+- `output/windows/FlightTracker/`
 
 If `Inno Setup 6` is installed, the build script creates `FlightTracker-Setup.exe`.
 Without it, the build still creates the unpacked app folder.

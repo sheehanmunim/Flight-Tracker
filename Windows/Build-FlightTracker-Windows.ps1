@@ -200,7 +200,7 @@ function Publish-OrCopyBuild {
 
 $repoRoot = Get-AbsolutePath -Path (Join-Path $PSScriptRoot "..")
 $distRoot = if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
-    Join-Path $repoRoot "dist\windows"
+    Join-Path $repoRoot "output\windows"
 } else {
     Get-AbsolutePath -Path $OutputRoot
 }

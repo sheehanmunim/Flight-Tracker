@@ -9,8 +9,8 @@ For packaging from the repo root, use:
 If you want a real Mac app bundle and DMG, run `Build-FlightTracker-MacApp.sh` on a Mac.
 That script creates:
 
-- `dist/macos/Flight Tracker.app`
-- `dist/macos/FlightTracker.dmg`
+- `output/macos/Flight Tracker.app`
+- `output/macos/FlightTracker.dmg`
 
 The packaged app stores its shared dashboard URL in:
 

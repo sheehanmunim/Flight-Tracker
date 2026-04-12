@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-DIST_DIR="$REPO_ROOT/dist/macos"
+DIST_DIR="$REPO_ROOT/output/macos"
 APP_NAME="Flight Tracker"
 APP_BUNDLE="$DIST_DIR/$APP_NAME.app"
 DMG_PATH="$DIST_DIR/FlightTracker.dmg"

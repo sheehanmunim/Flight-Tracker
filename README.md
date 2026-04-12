@@ -39,13 +39,13 @@ Tagged builds now publish release assets automatically from `.github/workflows/b
 - `vendor/`: bundled SDR and dump1090 binaries
 - `feeders/`: example feeder configuration files
 - `macOS/`: Mac launcher files and DMG builder
-- `dist/`: generated packaged outputs such as the Windows EXE and Mac DMG
+- `output/`: generated packaged outputs such as the Windows EXE and Mac DMG
 - `logs/`: runtime logs and status files created locally
 
 ## Build Outputs
 
-- `Windows-EXE.cmd` creates `dist/windows/FlightTracker-Setup.exe`
-- `./Mac-DMG.command` creates `dist/macos/FlightTracker.dmg` on a Mac
+- `Windows-EXE.cmd` creates `output/windows/FlightTracker-Setup.exe`
+- `./Mac-DMG.command` creates `output/macos/FlightTracker.dmg` on a Mac
 
 Releases are published by pushing a tag like `v1.0.0`.
 

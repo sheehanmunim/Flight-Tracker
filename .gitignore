@@ -5,5 +5,4 @@ scripts/__pycache__/
 apps/**/bin/
 apps/**/obj/
 macOS/flight-tracker-url.txt
-dist/*
-!dist/README.md
+output/
