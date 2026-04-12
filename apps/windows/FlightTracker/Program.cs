@@ -57,7 +57,9 @@ internal sealed class MainForm : Form
         _statusScript = Path.Combine(_repoRoot, "scripts", "Status-LocalFlightTracker.ps1");
         _stopScript = Path.Combine(_repoRoot, "scripts", "Stop-LocalFlightTracker.ps1");
         _nativeFeederScript = Path.Combine(_repoRoot, "scripts", "Manage-NativeFeeder.ps1");
-        _webLauncher = Path.Combine(_repoRoot, "Run-FlightTracker-Browser.cmd");
+        var preferredWebLauncher = Path.Combine(_repoRoot, "Browser.cmd");
+        var legacyWebLauncher = Path.Combine(_repoRoot, "Run-FlightTracker-Browser.cmd");
+        _webLauncher = File.Exists(preferredWebLauncher) ? preferredWebLauncher : legacyWebLauncher;
         _feedersGuide = Path.Combine(_repoRoot, "docs", "FEEDING-NETWORKS.md");
         _logFile = Path.Combine(_repoRoot, "logs", "dump1090.log");
 
@@ -650,10 +652,9 @@ internal sealed class MainForm : Form
         while (current is not null)
         {
             var hasRootMarker = File.Exists(Path.Combine(current.FullName, "flight-tracker-root.marker"));
-            var hasLegacyLauncher = File.Exists(Path.Combine(current.FullName, "Run-FlightTracker-Windows.cmd"));
             var hasScripts = File.Exists(Path.Combine(current.FullName, "scripts", "Start-LocalFlightTracker.ps1"));
 
-            if (hasScripts && (hasRootMarker || hasLegacyLauncher))
+            if (hasScripts && hasRootMarker)
             {
                 return current.FullName;
             }

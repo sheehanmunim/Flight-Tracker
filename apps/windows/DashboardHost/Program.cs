@@ -170,10 +170,9 @@ static class RepoPaths
             while (current is not null)
             {
                 var hasRootMarker = File.Exists(Path.Combine(current.FullName, "flight-tracker-root.marker"));
-                var hasLegacyLauncher = File.Exists(Path.Combine(current.FullName, "Run-FlightTracker-Browser.cmd"));
                 var hasScripts = File.Exists(Path.Combine(current.FullName, "scripts", "Start-LocalFlightTracker.ps1"));
 
-                if (hasScripts && (hasRootMarker || hasLegacyLauncher))
+                if (hasScripts && hasRootMarker)
                 {
                     return current.FullName;
                 }

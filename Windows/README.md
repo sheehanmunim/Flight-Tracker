@@ -4,23 +4,22 @@ This folder contains the Windows packaging files.
 
 Most people should start from the repo root with:
 
-- `Build-FlightTracker-Windows.cmd`
+- `Windows-EXE.cmd`
 
 It contains:
 
-- `Build-FlightTracker-Windows.ps1`: build the Windows package, ZIP, and installer
+- `Build-FlightTracker-Windows.ps1`: build the Windows package folder and installer
 - `FlightTracker-Installer.iss`: Inno Setup definition for the Windows installer
 
 Source launchers live at the repo root:
 
-- `Run-FlightTracker-Windows.cmd`
-- `Run-FlightTracker-Browser.cmd`
+- `Browser.cmd`
+- `Windows-EXE.cmd`
 
 Generated Windows download outputs go to:
 
 - `dist/windows/FlightTracker-Setup.exe`
-- `dist/windows/FlightTracker-Windows.zip`
 - `dist/windows/FlightTracker/`
 
 If `Inno Setup 6` is installed, the build script creates `FlightTracker-Setup.exe`.
-Without it, the script still creates the portable ZIP and unpacked app folder.
+Without it, the build still creates the unpacked app folder.

@@ -5,7 +5,7 @@ This folder is for generated build outputs.
 Examples:
 
 - Windows installer EXEs
-- Windows packaged folders and ZIPs
+- Windows packaged folders
 - Mac app bundles and DMGs
 - other release artifacts created by packaging scripts or CI
 

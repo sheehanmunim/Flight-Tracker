@@ -3,12 +3,9 @@
 ## Top Level
 
 - `README.md`: product-level overview and quick links
-- `Run-FlightTracker-Windows.cmd`: source launcher for the Windows desktop app
-- `Run-FlightTracker-Browser.cmd`: source launcher for the browser dashboard
-- `Build-FlightTracker-Windows.cmd`: simple Windows packaging entrypoint
-- `Build-FlightTracker-Mac.command`: simple Mac packaging entrypoint
-- `Create-FlightTracker-Release.cmd`: simple GitHub release entrypoint
-- `Create-FlightTracker-Release.ps1`: PowerShell release implementation
+- `Browser.cmd`: browser dashboard entrypoint
+- `Windows-EXE.cmd`: Windows installer build entrypoint
+- `Mac-DMG.command`: Mac DMG build entrypoint
 - `apps/`: app source code
 - `docs/`: install, download, and repo guides
 - `Windows/`: Windows packaging files
@@ -43,12 +40,11 @@ These are the actual runtime operations the apps call:
 
 ## Release Flow
 
-- `Create-FlightTracker-Release.cmd 1.0.0`: creates and pushes tag `v1.0.0`
-- `.github/workflows/build-release-artifacts.yml`: builds the Windows `.exe`, Windows ZIP, and Mac `.dmg`, then publishes the GitHub Release
+- Push a tag like `v1.0.0`
+- `.github/workflows/build-release-artifacts.yml`: builds the Windows `.exe` and Mac `.dmg`, then publishes the GitHub Release
 
 ## dist
 
 - `dist/windows/FlightTracker-Setup.exe`: Windows installer output
-- `dist/windows/FlightTracker-Windows.zip`: packaged Windows ZIP output
 - `dist/windows/FlightTracker/`: unpacked packaged Windows app folder
 - `dist/macos/`: Mac app bundle and DMG outputs

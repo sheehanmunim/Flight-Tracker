@@ -15,12 +15,6 @@ If you want the browser-host mode instead:
 2. Open `Flight Tracker Browser Host` from the Start Menu.
 3. Open the local browser window it launches.
 
-If you want the portable Windows version instead:
-
-1. Download the Windows ZIP.
-2. Extract it anywhere you want.
-3. Double-click `FlightTracker\Desktop\FlightTracker.exe` or `FlightTracker\Run-FlightTracker-Windows.cmd`.
-
 If you want the Mac client:
 
 1. Download the Mac DMG.
@@ -29,11 +23,11 @@ If you want the Mac client:
 
 ## From Source
 
-Use these entrypoints in the repo:
+Use these three commands in the repo root:
 
-- `Run-FlightTracker-Windows.cmd`
-- `Run-FlightTracker-Browser.cmd`
-- `macOS/Run-FlightTracker-Mac.command`
+- `Browser.cmd`
+- `Windows-EXE.cmd`
+- `./Mac-DMG.command`
 
 ## What Still Has To Be On Windows
 

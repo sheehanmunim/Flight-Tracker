@@ -209,7 +209,6 @@ $packageRoot = Join-Path $distRoot "FlightTracker"
 $desktopRoot = Join-Path $packageRoot "Desktop"
 $dashboardRoot = Join-Path $packageRoot "DashboardHost"
 $logsRoot = Join-Path $packageRoot "logs"
-$zipPath = Join-Path $distRoot "FlightTracker-Windows.zip"
 $setupPath = Join-Path $distRoot "FlightTracker-Setup.exe"
 $installerScriptPath = Join-Path $PSScriptRoot "FlightTracker-Installer.iss"
 
@@ -243,28 +242,21 @@ Copy-Item -LiteralPath (Join-Path $repoRoot "README.md") -Destination (Join-Path
 Copy-Item -LiteralPath (Join-Path $repoRoot "dump1090-local.cfg") -Destination (Join-Path $packageRoot "dump1090-local.cfg") -Force
 Copy-Item -LiteralPath (Join-Path $repoRoot "flight-tracker-root.marker") -Destination (Join-Path $packageRoot "flight-tracker-root.marker") -Force
 
-$windowsLauncher = @"
-@echo off
-setlocal
-start "" "%~dp0Desktop\FlightTracker.exe"
-"@
-
 $browserLauncher = @"
 @echo off
 setlocal
 start "" "%~dp0DashboardHost\FlightTrackerDashboard.exe"
 "@
 
-Set-Content -LiteralPath (Join-Path $packageRoot "Run-FlightTracker-Windows.cmd") -Value $windowsLauncher
-Set-Content -LiteralPath (Join-Path $packageRoot "Run-FlightTracker-Browser.cmd") -Value $browserLauncher
+Set-Content -LiteralPath (Join-Path $packageRoot "Browser.cmd") -Value $browserLauncher
 
 $packageReadme = @"
 Flight Tracker Windows package
 ==============================
 
-Simple launchers:
-  Run-FlightTracker-Windows.cmd
-  Run-FlightTracker-Browser.cmd
+Simple choices:
+  Desktop\FlightTracker.exe
+  Browser.cmd
 
 Desktop launcher:
   Desktop\FlightTracker.exe
@@ -285,12 +277,6 @@ Notes:
 "@
 
 Set-Content -LiteralPath (Join-Path $packageRoot "PACKAGE-README.txt") -Value $packageReadme
-
-if (Test-Path -LiteralPath $zipPath) {
-    Remove-Item -LiteralPath $zipPath -Force
-}
-
-Compress-Archive -Path $packageRoot -DestinationPath $zipPath -CompressionLevel Optimal
 
 $innoCompiler = Find-InnoSetupCompiler
 $installerMode = "not built (Inno Setup not found)"
@@ -324,9 +310,6 @@ Write-Host "  $(Join-Path $desktopRoot 'FlightTracker.exe')"
 Write-Host ""
 Write-Host "Dashboard host EXE:"
 Write-Host "  $(Join-Path $dashboardRoot 'FlightTrackerDashboard.exe')"
-Write-Host ""
-Write-Host "Download ZIP:"
-Write-Host "  $zipPath"
 Write-Host ""
 Write-Host "Installer EXE:"
 Write-Host "  $setupPath"

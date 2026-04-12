@@ -41,7 +41,6 @@ jobs:
           path: |
             dist/windows/FlightTracker-Setup.exe
             dist/windows/FlightTracker
-            dist/windows/FlightTracker-Windows.zip
 
   macos:
     runs-on: macos-latest
@@ -91,5 +90,4 @@ jobs:
           generate_release_notes: true
           files: |
             release-assets/windows/FlightTracker-Setup.exe
-            release-assets/windows/FlightTracker-Windows.zip
             release-assets/macos/FlightTracker.dmg

@@ -1,10 +1,10 @@
 # macOS Launcher
 
-`Run-FlightTracker-Mac.command` is the simple Mac entrypoint during development.
+This folder contains the Mac packaging files.
 
 For packaging from the repo root, use:
 
-- `./Build-FlightTracker-Mac.command`
+- `./Mac-DMG.command`
 
 If you want a real Mac app bundle and DMG, run `Build-FlightTracker-MacApp.sh` on a Mac.
 That script creates:
@@ -18,7 +18,7 @@ The packaged app stores its shared dashboard URL in:
 
 ## Setup
 
-1. Start the dashboard on the Windows host with `Run-FlightTracker-Browser.cmd`.
+1. Start the dashboard on the Windows host with `Browser.cmd`.
 2. The Windows launcher automatically writes a shareable URL to `macOS/flight-tracker-url.txt`.
 3. If needed, replace that URL with the correct Windows host IP and the same `?key=...` value.
 4. Double-click `Run-FlightTracker-Mac.command` on the Mac.
