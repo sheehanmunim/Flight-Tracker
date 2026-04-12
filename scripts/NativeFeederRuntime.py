@@ -7,6 +7,7 @@ import argparse
 import json
 import logging
 import os
+import tempfile
 import selectors
 import signal
 import socket
@@ -33,6 +34,8 @@ class RuntimeContext:
     stop_event: threading.Event
     logger: logging.Logger
     last_error: str = ""
+    last_status_write_monotonic: float = 0.0
+    last_status_payload: str = ""
 
 
 class BaseRuntime:
@@ -141,6 +144,7 @@ class BaseRuntime:
         summary: str,
         last_error: str,
         extra: dict[str, object] | None = None,
+        min_interval_seconds: float = 0.0,
     ) -> None:
         payload: dict[str, object] = {
             "providerId": self.args.provider,
@@ -157,7 +161,57 @@ class BaseRuntime:
             payload.update(extra)
 
         status_path = Path(self.args.status_file)
-        status_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        payload_json = json.dumps(payload, indent=2)
+        now = time.monotonic()
+
+        if (
+            min_interval_seconds > 0
+            and payload_json == self.context.last_status_payload
+            and now - self.context.last_status_write_monotonic < min_interval_seconds
+        ):
+            return
+
+        if min_interval_seconds > 0 and now - self.context.last_status_write_monotonic < min_interval_seconds:
+            return
+
+        for attempt in range(6):
+            temp_path: str | None = None
+            try:
+                with tempfile.NamedTemporaryFile(
+                    "w",
+                    encoding="utf-8",
+                    delete=False,
+                    dir=str(status_path.parent),
+                    prefix=status_path.stem + ".",
+                    suffix=".tmp",
+                ) as handle:
+                    handle.write(payload_json)
+                    temp_path = handle.name
+
+                os.replace(temp_path, status_path)
+                self.context.last_status_payload = payload_json
+                self.context.last_status_write_monotonic = time.monotonic()
+                return
+            except PermissionError as exc:
+                if temp_path:
+                    try:
+                        os.unlink(temp_path)
+                    except OSError:
+                        pass
+
+                if attempt == 5:
+                    self.logger.warning("Skipping status update because the status file is locked: %s", exc)
+                    return
+
+                time.sleep(0.15 * (attempt + 1))
+            except OSError as exc:
+                if temp_path:
+                    try:
+                        os.unlink(temp_path)
+                    except OSError:
+                        pass
+                self.logger.warning("Skipping status update because the status file could not be replaced: %s", exc)
+                return
 
 
 class BeastRelayRuntime(BaseRuntime):
@@ -348,6 +402,7 @@ class FlightAwareRuntime(BaseRuntime):
                 summary=self._connected_summary(),
                 last_error="",
                 extra=self._status_extra(),
+                min_interval_seconds=2.0,
             )
 
     def _process_server(self, target: ssl.SSLSocket) -> None:
