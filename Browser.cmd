@@ -5,6 +5,7 @@ set "ROOT=%~dp0"
 if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
 
 set "PROJECT=%ROOT%\apps\windows\DashboardHost\DashboardHost.csproj"
+set "TRACKER_START=%ROOT%\scripts\Start-LocalFlightTracker.ps1"
 set "USER_DOTNET=%USERPROFILE%\.dotnet\dotnet.exe"
 set "DOTNET_EXE="
 set "PORT=5099"
@@ -30,13 +31,17 @@ if errorlevel 1 (
 
 if not exist "%ROOT%\logs" mkdir "%ROOT%\logs"
 
+echo Starting the local tracker runtime...
+powershell -ExecutionPolicy Bypass -File "%TRACKER_START%" -NoBrowser
+if errorlevel 1 exit /b %errorlevel%
+
 set "LISTENER_COUNT=0"
 netstat -ano | findstr /r /c:":%PORT% .*LISTENING" >nul 2>&1
 if not errorlevel 1 set "LISTENER_COUNT=1"
 
 if "%LISTENER_COUNT%"=="0" (
   if exist "%KEY_FILE%" del "%KEY_FILE%" >nul 2>&1
-  start "Flight Tracker Web" cmd /k ""%DOTNET_EXE%" run --project "%PROJECT%" -c Release --urls http://0.0.0.0:%PORT%"
+  start "Flight Tracker Web" cmd /k ""%DOTNET_EXE%" run --project "%PROJECT%" -c Release -- --no-browser --urls http://0.0.0.0:%PORT%"
   powershell -ExecutionPolicy Bypass -Command "Start-Sleep -Seconds 6"
 )
 

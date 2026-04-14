@@ -291,13 +291,17 @@ function Connect-Provider {
     New-Item -ItemType Directory -Force -Path $Paths.LogDir | Out-Null
     Set-Content -LiteralPath $ProviderPaths.EnabledMarker -Value "enabled"
 
-    Write-StatusFile `
-        -StatusFile $ProviderPaths.StatusFile `
-        -Provider $Spec.Provider `
-        -State "starting" `
-        -Summary "$($Spec.DisplayName) is starting on this host." `
-        -Source "$($Spec.SourceHost):$($Spec.SourcePort)" `
-        -Target "$($Spec.TargetHost):$($Spec.TargetPort)"
+    $existingProcess = Get-RunningProcess -PidFile $ProviderPaths.PidFile
+
+    if (-not $existingProcess) {
+        Write-StatusFile `
+            -StatusFile $ProviderPaths.StatusFile `
+            -Provider $Spec.Provider `
+            -State "starting" `
+            -Summary "$($Spec.DisplayName) is starting on this host." `
+            -Source "$($Spec.SourceHost):$($Spec.SourcePort)" `
+            -Target "$($Spec.TargetHost):$($Spec.TargetPort)"
+    }
 
     $trackerRunning = Get-NetTCPConnection -LocalPort $Spec.SourcePort -ErrorAction SilentlyContinue |
         Where-Object { $_.State -eq "Listen" } |
@@ -308,7 +312,12 @@ function Connect-Provider {
         & powershell.exe -ExecutionPolicy Bypass -File $Paths.StartScript -NoBrowser | Out-Null
     }
 
-    $process = Start-ProviderProcess -Paths $Paths -Spec $Spec -ProviderPaths $ProviderPaths
+    $process = if ($existingProcess) {
+        $existingProcess
+    }
+    else {
+        Start-ProviderProcess -Paths $Paths -Spec $Spec -ProviderPaths $ProviderPaths
+    }
 
     $processId = $process.ProcessId
     if (-not $processId) {
