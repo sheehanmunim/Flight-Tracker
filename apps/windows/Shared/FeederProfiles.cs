@@ -68,8 +68,8 @@ internal static class FeederProfiles
             Id = "flightaware",
             Name = "FlightAware",
             Badge = "Quick Connect or PiAware",
-            Summary = "Quick Connect starts the lightweight uploader on this Windows PC. Full FlightAware MLAT still needs PiAware on a supported ARM Linux environment, because FlightAware does not publish PiAware packages for this x86_64 WSL setup.",
-            InstallHint = "Quick Connect works from Windows. PiAware MLAT still needs a supported ARM Linux environment rather than this x86_64 WSL install.",
+            Summary = "Quick Connect starts the lightweight uploader on this Windows PC. Install Official Feeder builds and runs PiAware in WSL against Beast on 30005 for the full FlightAware MLAT path.",
+            InstallHint = "Quick Connect is the fast Windows-only uploader. Use Install Official Feeder when you want PiAware and FlightAware MLAT on this Windows PC.",
             SourceLabel = "Best local MLAT source is Beast on 30005, but the Windows Quick Connect path still uses the local SBS uploader path.",
             LocalSettings =
             [
@@ -88,7 +88,7 @@ internal static class FeederProfiles
             Notes =
             [
                 "Quick Connect reads the local SBS feed and is useful for a fast ADS-B-only upload from this Windows PC.",
-                "FlightAware's official PiAware packages are ARM-only, so this current Windows x86_64 plus WSL path cannot provide full FlightAware MLAT yet.",
+                "Install Official Feeder now builds and runs PiAware directly inside WSL on this Windows PC.",
                 "After Quick Connect starts, claim the feeder in your FlightAware account."
             ]
         },

@@ -66,10 +66,10 @@ The important current state:
 What that does and does not mean:
 
 - `airplanes.live` MLAT works through `Install Official Feeder`, which installs the standard airplanes.live runtime in WSL against Beast on `30005`
-- `FlightAware` Quick Connect works for ADS-B uploads, but full FlightAware MLAT still needs PiAware on a supported ARM Linux environment
+- `FlightAware` MLAT now works through `Install Official Feeder`, which builds and runs PiAware in WSL against Beast on `30005`
 - `Quick Connect` is still the lightweight Windows-only uploader path and is not the full MLAT path for every network
 
-So the receiver PC is MLAT-capable on its Beast output. The official airplanes.live WSL install is the MLAT path on this machine today, while FlightAware MLAT still needs supported ARM Linux hardware upstream.
+So the receiver PC is MLAT-capable on its Beast output. Both the official `airplanes.live` and official `FlightAware` WSL installs now use that MLAT-capable Beast feed on this machine.
 
 ## Feeding Networks
 
@@ -81,7 +81,7 @@ Flight Tracker can save or manage feeder settings for:
 
 Current feeder behavior:
 
-- `FlightAware`: `Quick Connect` uses the lightweight Windows uploader; full PiAware MLAT still needs supported ARM Linux hardware
+- `FlightAware`: `Quick Connect` uses the lightweight Windows uploader; `Install Official Feeder` builds and runs PiAware in WSL with MLAT support
 - `airplanes.live`: `Quick Connect` uses the lightweight Windows relay; `Install Official Feeder` installs the standard WSL feeder with MLAT support
 - `Flightradar24`: you can copy the saved settings or install the feeder package in WSL from the apps
 

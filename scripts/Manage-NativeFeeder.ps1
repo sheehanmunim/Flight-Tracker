@@ -372,9 +372,21 @@ function Show-ProviderStatus {
 
     $enabled = Test-Path -LiteralPath $ProviderPaths.EnabledMarker
     $process = Get-RunningProcess -PidFile $ProviderPaths.PidFile
+    $statusPayload = $null
+
+    if (Test-Path -LiteralPath $ProviderPaths.StatusFile) {
+        try {
+            $statusPayload = Get-Content -LiteralPath $ProviderPaths.StatusFile -Raw | ConvertFrom-Json
+        }
+        catch {
+            $statusPayload = $null
+        }
+    }
 
     if ($process) {
         Write-Host "$($Spec.DisplayName): connected on host (PID $($process.ProcessId))" -ForegroundColor Green
+    } elseif ($statusPayload -and $statusPayload.running) {
+        Write-Host "$($Spec.DisplayName): official feeder active" -ForegroundColor Green
     } elseif ($enabled) {
         Write-Host "$($Spec.DisplayName): enabled, waiting for host connector" -ForegroundColor Yellow
     } else {
@@ -384,10 +396,10 @@ function Show-ProviderStatus {
     Write-Host "Source: tcp://$($Spec.SourceHost):$($Spec.SourcePort)"
     Write-Host "Target: $($Spec.TargetHost):$($Spec.TargetPort)"
 
-    if (Test-Path -LiteralPath $ProviderPaths.StatusFile) {
+    if ($statusPayload) {
         Write-Host ""
         Write-Host "Runtime status:"
-        Get-Content -LiteralPath $ProviderPaths.StatusFile
+        $statusPayload | ConvertTo-Json
     }
 }
 

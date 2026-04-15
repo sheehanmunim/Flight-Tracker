@@ -15,7 +15,7 @@ The short version:
 
 - `FlightAware` offers two paths:
 - `Quick Connect` is the lightweight Windows uploader.
-- Full FlightAware MLAT still needs PiAware on a supported ARM Linux environment. On this Windows x86_64 plus WSL setup, Quick Connect is the path that works today.
+- `Install Official Feeder` now builds and runs PiAware in WSL against Beast on `30005`, which is the full FlightAware MLAT path on this Windows PC.
 - `airplanes.live` also offers two paths:
 - `Quick Connect` is the lightweight Windows relay.
 - `Install Official Feeder` installs the standard airplanes.live runtime in WSL against Beast on `30005` for the normal MLAT path.

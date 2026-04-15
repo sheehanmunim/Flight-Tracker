@@ -53,13 +53,16 @@ internal static class NativeFeederRuntime
         var statusFile = LoadStatusFile(repoRoot, providerId);
         var running = statusFile?.Running == true;
         var state = statusFile?.State?.Trim() ?? string.Empty;
+        var isOfficialInstall = !enabled
+            && string.Equals(providerId, "flightaware", StringComparison.OrdinalIgnoreCase)
+            && (statusFile?.Summary?.StartsWith("Official PiAware", StringComparison.OrdinalIgnoreCase) == true);
 
         string statusLabel;
         string summary;
 
         if (running)
         {
-            statusLabel = "Quick Connected";
+            statusLabel = isOfficialInstall ? "Official PiAware Running" : "Quick Connected";
             summary = statusFile?.Summary
                 ?? $"Relaying Beast data from {statusFile?.Source ?? "127.0.0.1:30005"} to {statusFile?.Target ?? "the provider"} from this Windows PC.";
         }
@@ -89,8 +92,8 @@ internal static class NativeFeederRuntime
             Running = running,
             StatusLabel = statusLabel,
             Summary = summary,
-            PrimaryActionLabel = enabled ? "Disconnect Quick Connect" : "Quick Connect",
-            CanConnect = !enabled,
+            PrimaryActionLabel = enabled ? "Disconnect Quick Connect" : (isOfficialInstall ? "Official PiAware Installed" : "Quick Connect"),
+            CanConnect = !enabled && !isOfficialInstall,
             CanDisconnect = enabled,
             LogName = providerId,
             Source = statusFile?.Source,
