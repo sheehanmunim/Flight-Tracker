@@ -1,12 +1,14 @@
 # Flight Tracker
 
-Flight Tracker is now organized around only three user-facing things:
+Flight Tracker is one Windows receiver PC with three user-facing ways to control it:
 
-- `Browser`: run the dashboard on the Windows host
-- `Windows EXE`: build the Windows installer
-- `Mac DMG`: build the Mac app download
+- `Browser`: a local web dashboard started with `Browser.cmd`
+- `Windows app`: the packaged Windows launcher/app
+- `Mac app`: a remote dashboard client that talks to the Windows receiver PC
 
-## The Only Three Commands
+All three surfaces control the same Windows machine. The RTL-SDR dongle and decoder stay on that Windows receiver PC.
+
+## Quick Start
 
 From the repo root:
 
@@ -14,51 +16,60 @@ From the repo root:
 - `Windows-EXE.cmd`
 - `./Mac-DMG.command`
 
-That is the whole user-facing surface of this repo.
+Those are the only top-level commands most users need.
+
+## How It Works
+
+There is one real receiver/decoder PC:
+
+- the `Windows receiver PC` runs `dump1090.exe`
+- that PC serves the local aircraft map on `http://localhost:8080`
+- that PC also exposes local feed outputs for feeder software
+
+The three frontends are just different ways to control that same receiver PC:
+
+- `Browser.cmd` starts the tracker runtime and opens the web dashboard
+- the `Windows app` is a native launcher/control app for the same receiver PC
+- the `Mac app` is a remote client for the same receiver PC and uses the shared dashboard URL
+
+The Mac app does not decode ADS-B by itself. It controls the Windows receiver PC over the dashboard URL.
 
 ## Downloads
 
 If you are on GitHub and just want the app:
 
 - open the repository `Releases` tab
-- download `FlightTracker-Setup.exe` for Windows and run the installer
-- download `FlightTracker.dmg` for Mac (Apple Silicon compatible)
-- use the browser mode from the Windows machine that is running the tracker
+- download `FlightTracker-Setup.exe` for Windows
+- download `FlightTracker.dmg` for Mac
+- or use `Browser.cmd` on the Windows machine that has the SDR attached
 
-Tagged builds now publish release assets automatically from `.github/workflows/build-release-artifacts.yml`.
+Tagged builds publish release assets automatically from `.github/workflows/build-release-artifacts.yml`.
 
-## Repo Layout
+## Local Ports
 
-- `Browser.cmd`: run the browser dashboard on the Windows host
-- `Windows-EXE.cmd`: build `FlightTracker-Setup.exe`
-- `Mac-DMG.command`: build `FlightTracker.dmg` on a Mac
-- `apps/windows/`: Windows app source code
-- `docs/`: short guides for install/download/layout
-- `Windows/`: Windows packaging files
-- `scripts/`: PowerShell and Python runtime helpers used by the app
-- `vendor/`: bundled SDR and dump1090 binaries
-- `feeders/`: example feeder configuration files
-- `macOS/`: Mac launcher files and DMG builder
-- `logs/`: runtime logs and status files created locally
+Useful local feed outputs on the Windows receiver PC:
 
-## Build Outputs
+- `127.0.0.1:30002` as AVR/raw
+- `127.0.0.1:30003` as SBS/BaseStation
+- `127.0.0.1:30005` as Beast binary
+- `http://127.0.0.1:8080` as the local map/web UI
+- `http://127.0.0.1:5099` as the dashboard app
 
-- `Windows-EXE.cmd` creates `FlightTracker-Setup.exe` in the repo root
-- `./Mac-DMG.command` creates `FlightTracker.dmg` in the repo root on a Mac
+## MLAT
 
-Releases are published by pushing a tag like `v1.0.0`.
+The important current state:
 
-## Mac Setup
+- `30005` now comes directly from `dump1090.exe`
+- that means the Beast feed on `30005` now carries decoder timestamps instead of synthetic bridge timestamps
+- this is the receiver-side requirement for MLAT-capable Beast clients
 
-1. Start the dashboard on the Windows host with `Browser.cmd`.
-2. Build the Mac app with `./Mac-DMG.command` on a Mac.
-3. Open the Mac app and paste the shared dashboard URL if prompted.
+What that does and does not mean:
 
-The packaged Mac app stores its shared dashboard URL in:
+- `airplanes.live` MLAT works through `Install Official Feeder`, which installs the standard airplanes.live runtime in WSL against Beast on `30005`
+- `FlightAware` Quick Connect works for ADS-B uploads, but full FlightAware MLAT still needs PiAware on a supported ARM Linux environment
+- `Quick Connect` is still the lightweight Windows-only uploader path and is not the full MLAT path for every network
 
-- `~/Library/Application Support/Flight Tracker/flight-tracker-url.txt`
-
-The RTL-SDR dongle still has to stay plugged into the Windows host machine.
+So the receiver PC is MLAT-capable on its Beast output. The official airplanes.live WSL install is the MLAT path on this machine today, while FlightAware MLAT still needs supported ARM Linux hardware upstream.
 
 ## Feeding Networks
 
@@ -68,25 +79,51 @@ Flight Tracker can save or manage feeder settings for:
 - `airplanes.live`
 - `Flightradar24`
 
-Important feeder note:
+Current feeder behavior:
 
-- the Beast bridge uses synthetic timestamps, so MLAT should stay disabled for Beast-only clients
+- `FlightAware`: `Quick Connect` uses the lightweight Windows uploader; full PiAware MLAT still needs supported ARM Linux hardware
+- `airplanes.live`: `Quick Connect` uses the lightweight Windows relay; `Install Official Feeder` installs the standard WSL feeder with MLAT support
+- `Flightradar24`: you can copy the saved settings or install the feeder package in WSL from the apps
 
 Example config files:
 
 - `feeders/piaware.conf.example`
 - `feeders/fr24feed.ini.example`
 
-Useful local feed outputs:
+## Mac Setup
 
-- `127.0.0.1:30002` as AVR/raw
-- `127.0.0.1:30003` as SBS/BaseStation
-- `127.0.0.1:30005` as Beast binary
+1. Start the Windows receiver PC with `Browser.cmd`.
+2. Build the Mac app with `./Mac-DMG.command` on a Mac.
+3. Open the Mac app and use the shared dashboard URL if prompted.
 
-`FlightAware` and `airplanes.live` have built-in native Windows host connectors in this repo.
+The packaged Mac app stores its shared dashboard URL in:
+
+- `~/Library/Application Support/Flight Tracker/flight-tracker-url.txt`
+
+## Repo Layout
+
+- `Browser.cmd`: start the Windows tracker runtime and browser dashboard
+- `Windows-EXE.cmd`: build `FlightTracker-Setup.exe`
+- `Mac-DMG.command`: build `FlightTracker.dmg` on a Mac
+- `apps/windows/`: Windows app and dashboard source code
+- `docs/`: short guides
+- `Windows/`: Windows packaging files
+- `scripts/`: PowerShell and runtime helper scripts
+- `vendor/`: bundled SDR and `dump1090` binaries/source
+- `feeders/`: example feeder configuration files
+- `macOS/`: Mac launcher files and DMG builder
+- `logs/`: local runtime logs and state files
+
+## Build Outputs
+
+- `Windows-EXE.cmd` creates `FlightTracker-Setup.exe` in the repo root
+- `./Mac-DMG.command` creates `FlightTracker.dmg` in the repo root on a Mac
+
+Releases are published by pushing a tag like `v1.0.0`.
 
 ## Notes
 
-- The browser dashboard and Mac client control the Windows host, but the RTL-SDR dongle still has to be plugged into the Windows machine that runs the decoder.
-- The one remaining fresh-machine setup item on Windows can still be the RTL-SDR driver itself.
-- `logs/` is only for local runtime state such as `dump1090.log`, feeder status files, and the temporary dashboard key.
+- The RTL-SDR dongle must stay attached to the Windows machine that runs the decoder.
+- The browser dashboard, Windows app, and Mac app are all control surfaces for the same Windows receiver PC.
+- A fresh Windows machine may still need the RTL-SDR driver installed.
+- `logs/` is only local runtime state such as `dump1090.log`, feeder status files, and the dashboard key.

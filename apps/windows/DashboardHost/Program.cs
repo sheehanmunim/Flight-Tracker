@@ -49,8 +49,8 @@ app.MapGet("/api/meta", (HttpRequest request) =>
         repoRoot,
         mapUrl,
         lanUrl,
-        usbNote = "The browser can control the host, but the RTL-SDR still has to be attached to the host OS running the decoder.",
-        beastNote = "The local Beast bridge uses synthetic timestamps. Keep MLAT disabled."
+        usbNote = "The browser dashboard can control the Windows receiver PC, but the RTL-SDR still has to stay attached to the Windows PC running the decoder.",
+        beastNote = "Port 30005 now carries real decoder timestamps. Use Install Official Feeder for the full MLAT path."
     });
 });
 
@@ -73,8 +73,8 @@ app.MapDelete("/api/feeders/{id}", (string id, HttpRequest request) =>
 
 app.MapPost("/api/feeders/{id}/install", async (string id) =>
 {
-    var nativeFeederScript = Path.Combine(repoRoot, "scripts", "Manage-NativeFeeder.ps1");
-    var result = await ScriptRunner.RunPowerShellScriptAsync(repoRoot, nativeFeederScript, $"-Provider {id} -Action Connect");
+    var installFeederScript = Path.Combine(repoRoot, "scripts", "Install-Feeder.ps1");
+    var result = await ScriptRunner.RunPowerShellScriptAsync(repoRoot, installFeederScript, $"-Provider {id}");
     return Results.Json(result);
 });
 
@@ -218,7 +218,7 @@ internal static class ScriptRunner
     {
         if (!OperatingSystem.IsWindows())
         {
-            return new ScriptResult(false, "", "Local script execution is only supported on Windows hosts.", -1);
+            return new ScriptResult(false, "", "Local script execution is only supported on the Windows receiver PC.", -1);
         }
 
         var psi = new ProcessStartInfo

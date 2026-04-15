@@ -10,8 +10,6 @@ function Get-TrackerPaths {
         Root = $root
         Dump1090 = Join-Path $root "vendor\Dump1090\dump1090.exe"
         LogFile = Join-Path $root "logs\dump1090.log"
-        BeastBridgeLog = Join-Path $root "logs\beast-bridge.log"
-        BeastBridgePid = Join-Path $root "logs\beast-bridge.pid"
         RtlTest = Join-Path $root "vendor\rtl-sdr-tools\rtl-sdr-64bit-20260322\rtl_test.exe"
         Url = "http://localhost:8080"
     }
@@ -25,24 +23,6 @@ function Get-TrackerProcess {
 
     Get-CimInstance Win32_Process -Filter "Name = 'dump1090.exe'" -ErrorAction SilentlyContinue |
         Where-Object { $_.ExecutablePath -eq $ExecutablePath }
-}
-
-function Get-BridgeProcess {
-    param(
-        [Parameter(Mandatory)]
-        [string]$PidFile
-    )
-
-    if (-not (Test-Path -LiteralPath $PidFile)) {
-        return $null
-    }
-
-    $pidText = (Get-Content -LiteralPath $PidFile -ErrorAction SilentlyContinue | Select-Object -First 1).Trim()
-    if (-not $pidText -or $pidText -notmatch '^\d+$') {
-        return $null
-    }
-
-    return Get-CimInstance Win32_Process -Filter "ProcessId = $pidText" -ErrorAction SilentlyContinue
 }
 
 function Get-PortListener {
@@ -87,7 +67,6 @@ function Write-PortStatus {
 
 $paths = Get-TrackerPaths
 $tracker = Get-TrackerProcess -ExecutablePath $paths.Dump1090 | Select-Object -First 1
-$bridge = Get-BridgeProcess -PidFile $paths.BeastBridgePid | Select-Object -First 1
 $listener = Get-PortListener -Port 8080
 
 if ($tracker) {
@@ -96,10 +75,10 @@ if ($tracker) {
     Write-Host "Tracker process : not running" -ForegroundColor Yellow
 }
 
-if ($bridge) {
-    Write-Host "Beast bridge    : running (PID $($bridge.ProcessId))" -ForegroundColor Green
+if ($tracker -and (Get-PortListener -Port 30005)) {
+    Write-Host "Beast output    : native on port 30005" -ForegroundColor Green
 } else {
-    Write-Host "Beast bridge    : not running" -ForegroundColor Yellow
+    Write-Host "Beast output    : not listening on port 30005" -ForegroundColor Yellow
 }
 
 if ($listener) {
@@ -114,8 +93,8 @@ Write-PortStatus -Port 30002 -Label "AVR/raw"
 Write-PortStatus -Port 30003 -Label "SBS"
 Write-PortStatus -Port 30005 -Label "Beast"
 Write-Host "FR24           : can use AVR on tcp://127.0.0.1:30002"
-Write-Host "FlightAware    : native host uploader can use SBS on tcp://127.0.0.1:30003; external/manual setups can use Beast on tcp://127.0.0.1:30005 with MLAT off"
-Write-Host "airplanes.live : can use Beast on tcp://127.0.0.1:30005, but synthetic timestamps mean MLAT should stay off"
+Write-Host "FlightAware    : Quick Connect uses SBS on tcp://127.0.0.1:30003; Install Official Feeder uses Beast on tcp://127.0.0.1:30005 with MLAT"
+Write-Host "airplanes.live : Quick Connect can use Beast on tcp://127.0.0.1:30005; Install Official Feeder uses the standard WSL MLAT path on tcp://127.0.0.1:30005"
 
 if ($tracker) {
     Write-Host "USB device      : skipped because the tracker already has the SDR open"
@@ -142,13 +121,6 @@ if ($logTail) {
     Write-Host ""
     Write-Host "Recent log output:"
     Write-Host $logTail
-}
-
-$bridgeLogTail = Get-RecentLogTail -LogPath $paths.BeastBridgeLog
-if ($bridgeLogTail) {
-    Write-Host ""
-    Write-Host "Recent Beast bridge log output:"
-    Write-Host $bridgeLogTail
 }
 
 $nativeStatusScript = Join-Path $paths.Root "scripts\Manage-NativeFeeder.ps1"

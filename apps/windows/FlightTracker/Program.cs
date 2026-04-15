@@ -26,6 +26,7 @@ internal sealed class MainForm : Form
     private readonly string _statusScript;
     private readonly string _stopScript;
     private readonly string _nativeFeederScript;
+    private readonly string _installFeederScript;
     private readonly string _webLauncher;
     private readonly string _feedersGuide;
     private readonly string _logFile;
@@ -44,6 +45,7 @@ internal sealed class MainForm : Form
     private readonly Button _copyLanFeederButton;
     private readonly Button _connectFeederButton;
     private readonly Button _disconnectFeederButton;
+    private readonly Button _installFeederButton;
     private readonly Label _summaryLabel;
     private readonly Label _feederHostLabel;
     private readonly ComboBox _feederComboBox;
@@ -57,6 +59,7 @@ internal sealed class MainForm : Form
         _statusScript = Path.Combine(_repoRoot, "scripts", "Status-LocalFlightTracker.ps1");
         _stopScript = Path.Combine(_repoRoot, "scripts", "Stop-LocalFlightTracker.ps1");
         _nativeFeederScript = Path.Combine(_repoRoot, "scripts", "Manage-NativeFeeder.ps1");
+        _installFeederScript = Path.Combine(_repoRoot, "scripts", "Install-Feeder.ps1");
         var preferredWebLauncher = Path.Combine(_repoRoot, "Browser.cmd");
         var legacyWebLauncher = Path.Combine(_repoRoot, "Run-FlightTracker-Browser.cmd");
         _webLauncher = File.Exists(preferredWebLauncher) ? preferredWebLauncher : legacyWebLauncher;
@@ -80,7 +83,7 @@ internal sealed class MainForm : Form
         {
             AutoSize = true,
             Font = new Font("Segoe UI", 10),
-            Text = "One-click control for the local map, SDR decoder, and Beast bridge on port 30005.",
+            Text = "Windows app for the shared receiver PC. The browser app and Mac app talk to this same Windows machine.",
             Margin = new Padding(0, 0, 0, 16)
         };
 
@@ -101,10 +104,11 @@ internal sealed class MainForm : Form
         _openLogsButton = CreateButton("Open Logs", (_, _) => OpenExternal(_logFile));
         _addFeederButton = CreateButton("Add Feeder", (_, _) => AddSelectedFeeder());
         _removeFeederButton = CreateButton("Remove Feeder", (_, _) => RemoveSelectedFeeder());
-        _copyLocalFeederButton = CreateButton("Copy Same-Host Setup", (_, _) => CopySelectedFeederSettings(useLanSettings: false));
+        _copyLocalFeederButton = CreateButton("Copy Same-PC Setup", (_, _) => CopySelectedFeederSettings(useLanSettings: false));
         _copyLanFeederButton = CreateButton("Copy LAN Setup", (_, _) => CopySelectedFeederSettings(useLanSettings: true));
-        _connectFeederButton = CreateButton("Connect On Host", async (_, _) => await ConnectSelectedFeederAsync());
-        _disconnectFeederButton = CreateButton("Disconnect", async (_, _) => await DisconnectSelectedFeederAsync());
+        _connectFeederButton = CreateButton("Quick Connect", async (_, _) => await ConnectSelectedFeederAsync());
+        _disconnectFeederButton = CreateButton("Disconnect Quick Connect", async (_, _) => await DisconnectSelectedFeederAsync());
+        _installFeederButton = CreateButton("Install Official Feeder", async (_, _) => await InstallSelectedFeederAsync());
 
         var buttonRow = new FlowLayoutPanel
         {
@@ -167,6 +171,7 @@ internal sealed class MainForm : Form
         feederToolbar.Controls.Add(_feederComboBox);
         feederToolbar.Controls.Add(_addFeederButton);
         feederToolbar.Controls.Add(_removeFeederButton);
+        feederToolbar.Controls.Add(_installFeederButton);
         feederToolbar.Controls.Add(_connectFeederButton);
         feederToolbar.Controls.Add(_disconnectFeederButton);
         feederToolbar.Controls.Add(_copyLocalFeederButton);
@@ -208,7 +213,7 @@ internal sealed class MainForm : Form
         {
             AutoSize = true,
             Font = new Font("Segoe UI", 9),
-            Text = "Pick a network once and this host keeps its feeder profile ready for the app and the dashboard.",
+            Text = "Pick a network once, then use Install Official Feeder for the standard MLAT path or Quick Connect for the lightweight Windows uploader.",
             Margin = new Padding(0, 0, 0, 2)
         }, 0, 1);
         feederPanel.Controls.Add(_feederHostLabel, 0, 2);
@@ -230,7 +235,7 @@ internal sealed class MainForm : Form
         {
             AutoSize = true,
             Font = new Font("Segoe UI", 9),
-            Text = "Note: the local Beast bridge uses synthetic timestamps. Use it for Beast-format feeders, but keep MLAT disabled.",
+            Text = "Note: port 30005 now comes straight from the decoder. Use Install Official Feeder when you want the standard MLAT-capable path.",
             Margin = new Padding(0, 12, 0, 0)
         };
 
@@ -432,7 +437,7 @@ internal sealed class MainForm : Form
         if (_feederListBox.Items.Count == 0)
         {
             _feederDetailsBox.Text = "No feeder profiles added yet." + Environment.NewLine + Environment.NewLine
-                + "Pick a network above and click Add Feeder to save its host settings.";
+                + "Pick a network above and click Add Feeder to save its settings for this Windows receiver PC.";
         }
         else
         {
@@ -506,7 +511,7 @@ internal sealed class MainForm : Form
         SetButtonsEnabled(false);
         try
         {
-            _statusBox.Text = $"Connecting {provider.Name} on this host..." + Environment.NewLine;
+            _statusBox.Text = $"Quick connecting {provider.Name} on this Windows PC..." + Environment.NewLine;
             _statusBox.Text = await RunPowerShellAsync(_nativeFeederScript, $"-Provider {provider.Id} -Action Connect");
             RefreshFeederUi();
         }
@@ -530,8 +535,32 @@ internal sealed class MainForm : Form
         SetButtonsEnabled(false);
         try
         {
-            _statusBox.Text = $"Disconnecting {provider.Name} on this host..." + Environment.NewLine;
+            _statusBox.Text = $"Disconnecting quick connect for {provider.Name}..." + Environment.NewLine;
             _statusBox.Text = await RunPowerShellAsync(_nativeFeederScript, $"-Provider {provider.Id} -Action Disconnect");
+            RefreshFeederUi();
+        }
+        catch (Exception ex)
+        {
+            _statusBox.Text = ex.Message;
+        }
+        finally
+        {
+            SetButtonsEnabled(true);
+        }
+    }
+
+    private async Task InstallSelectedFeederAsync()
+    {
+        if (_feederListBox.SelectedItem is not FeederProfile provider)
+        {
+            return;
+        }
+
+        SetButtonsEnabled(false);
+        try
+        {
+            _statusBox.Text = $"Installing the official {provider.Name} feeder in WSL on this Windows PC..." + Environment.NewLine;
+            _statusBox.Text = await RunPowerShellAsync(_installFeederScript, $"-Provider {provider.Id}");
             RefreshFeederUi();
         }
         catch (Exception ex)
@@ -554,7 +583,7 @@ internal sealed class MainForm : Form
         builder.AppendLine();
         builder.AppendLine(provider.InstallHint);
         builder.AppendLine();
-        builder.AppendLine("Host connector:");
+        builder.AppendLine("Quick Connect:");
         builder.AppendLine($"  Status: {runtime.StatusLabel}");
         builder.AppendLine($"  Summary: {runtime.Summary}");
         if (!string.IsNullOrWhiteSpace(runtime.User))
@@ -631,6 +660,7 @@ internal sealed class MainForm : Form
         _removeFeederButton.Enabled = enabled && _feederListBox.SelectedItem is FeederProfile;
         _copyLocalFeederButton.Enabled = enabled && _feederListBox.SelectedItem is FeederProfile;
         _copyLanFeederButton.Enabled = enabled && _feederListBox.SelectedItem is FeederProfile;
+        _installFeederButton.Enabled = enabled && _feederListBox.SelectedItem is FeederProfile;
 
         if (_feederListBox.SelectedItem is FeederProfile provider)
         {

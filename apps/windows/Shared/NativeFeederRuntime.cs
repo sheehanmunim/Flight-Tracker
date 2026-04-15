@@ -42,7 +42,7 @@ internal static class NativeFeederRuntime
                 Enabled = false,
                 Running = false,
                 StatusLabel = "Profile only",
-                Summary = "This provider still uses its saved host profile only. A native host connector is not wired into the app yet.",
+                Summary = "This provider currently uses saved profile settings only. Use Install Official Feeder or copy the shown settings.",
                 PrimaryActionLabel = "Not Yet Native",
                 CanConnect = false,
                 CanDisconnect = false
@@ -59,26 +59,26 @@ internal static class NativeFeederRuntime
 
         if (running)
         {
-            statusLabel = "Connected on host";
+            statusLabel = "Quick Connected";
             summary = statusFile?.Summary
-                ?? $"Relaying Beast data from {statusFile?.Source ?? "127.0.0.1:30005"} to {statusFile?.Target ?? "the provider"} on this host.";
+                ?? $"Relaying Beast data from {statusFile?.Source ?? "127.0.0.1:30005"} to {statusFile?.Target ?? "the provider"} from this Windows PC.";
         }
         else if (enabled)
         {
-            statusLabel = "Starting on host";
+            statusLabel = "Starting Quick Connect";
             summary = statusFile?.LastError
                 ?? statusFile?.Summary
-                ?? "The host connector is enabled and will keep retrying until the local Beast feed and provider endpoint are both reachable.";
+                ?? "The lightweight Windows connector is enabled and will keep retrying until the local feed and provider endpoint are both reachable.";
         }
         else if (string.Equals(state, "stopped", StringComparison.OrdinalIgnoreCase))
         {
             statusLabel = "Disconnected";
-            summary = statusFile?.Summary ?? "The host connector is currently stopped.";
+            summary = statusFile?.Summary ?? "The lightweight Windows connector is currently stopped.";
         }
         else
         {
-            statusLabel = "Not connected";
-            summary = "Click Connect On Host and this machine will start the feeder runtime itself.";
+            statusLabel = "Not quick connected";
+            summary = "Use Quick Connect for the lightweight Windows uploader, or Install Official Feeder for the full MLAT-capable path.";
         }
 
         return new NativeFeederRuntimeStatus
@@ -89,7 +89,7 @@ internal static class NativeFeederRuntime
             Running = running,
             StatusLabel = statusLabel,
             Summary = summary,
-            PrimaryActionLabel = enabled ? "Disconnect" : "Connect On Host",
+            PrimaryActionLabel = enabled ? "Disconnect Quick Connect" : "Quick Connect",
             CanConnect = !enabled,
             CanDisconnect = enabled,
             LogName = providerId,

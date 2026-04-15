@@ -427,7 +427,7 @@
     <header class="topbar">
       <div class="title-block">
         <h1>Flight Tracker</h1>
-        <p>One screen for the live map and feeder setup. Check the feeders you want and this host will save them right away.</p>
+        <p>One screen for the live map and feeder setup. The browser app, Windows app, and Mac app all control this same Windows receiver PC.</p>
       </div>
 
       <div class="key-box">
@@ -444,7 +444,7 @@
         <div class="panel-head">
           <div>
             <h2>Live Map</h2>
-            <p>This is the local aircraft map from the host running the tracker.</p>
+            <p>This is the local aircraft map from the Windows receiver PC running the tracker.</p>
           </div>
           <a id="mapLink" class="link-button" href="#" target="_blank" rel="noreferrer">Open In New Tab</a>
         </div>
@@ -470,7 +470,7 @@
             <button id="stopBtn" type="button">Stop Tracker</button>
             <button id="statusBtn" class="secondary" type="button">Refresh</button>
           </div>
-          <div class="helper-text" id="usbNote">Loading host details...</div>
+          <div class="helper-text" id="usbNote">Loading receiver details...</div>
         </div>
 
         <div class="map-frame">
@@ -481,13 +481,13 @@
       <aside class="panel sidebar">
         <section class="sidebar-section">
           <h2>Feeders</h2>
-          <p>Check a network to add it. FlightAware and airplanes.live try to connect on this computer automatically. Flightradar24 saves the correct host settings for its feeder app.</p>
+          <p>Add a network, then choose Quick Connect for the lightweight Windows uploader or Install Official Feeder for the standard WSL setup. Use the official install when you want MLAT.</p>
           <div id="feedersList" class="feeders-list"></div>
         </section>
 
         <section class="sidebar-section">
           <h2>Activity</h2>
-          <p>The latest host action or status result shows here.</p>
+          <p>The latest action or status result from this Windows receiver PC shows here.</p>
           <div id="activity" class="activity">Loading...</div>
         </section>
       </aside>
@@ -572,7 +572,7 @@
         mapFrame.src = meta.mapUrl || fallbackMapUrl;
       } catch (error) {
         metaState = { lanUrl: "", mapUrl: fallbackMapUrl, usbNote: "" };
-        usbNote.textContent = "Save the access key if the host details do not load.";
+        usbNote.textContent = "Save the access key if the receiver details do not load.";
         mapLink.href = fallbackMapUrl;
         mapFrame.src = fallbackMapUrl;
         throw error;
@@ -652,10 +652,22 @@
           await connectProvider(button.dataset.providerId);
         });
       });
+
+      feedersList.querySelectorAll("[data-disconnect-provider]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          await disconnectProvider(button.dataset.providerId);
+        });
+      });
+
+      feedersList.querySelectorAll("[data-install-provider]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          await installProvider(button.dataset.providerId);
+        });
+      });
     }
 
     function renderProvider(provider) {
-      const tagText = provider.nativeConnector?.supportsNativeConnector ? "Automatic" : "Manual Setup";
+      const tagText = provider.nativeConnector?.supportsNativeConnector ? "Quick Connect Ready" : "Profile Ready";
 
       return `
         <article class="provider ${provider.selected ? "selected" : ""}">
@@ -679,9 +691,13 @@
 
     function renderProviderDetails(provider) {
       const runtime = provider.nativeConnector || {};
-      const connectButton = runtime.supportsNativeConnector && !runtime.enabled
-        ? `<button type="button" class="primary" data-connect-provider data-provider-id="${escapeAttribute(provider.id)}">Connect Now</button>`
+      const quickConnectButton = runtime.supportsNativeConnector && !runtime.enabled
+        ? `<button type="button" class="secondary" data-connect-provider data-provider-id="${escapeAttribute(provider.id)}">Quick Connect</button>`
         : "";
+      const disconnectButton = runtime.supportsNativeConnector && runtime.enabled
+        ? `<button type="button" class="secondary" data-disconnect-provider data-provider-id="${escapeAttribute(provider.id)}">Disconnect Quick Connect</button>`
+        : "";
+      const installButton = `<button type="button" class="primary" data-install-provider data-provider-id="${escapeAttribute(provider.id)}">${escapeHtml(getInstallButtonLabel(provider))}</button>`;
 
       return `
         <div class="provider-details">
@@ -704,7 +720,9 @@
           ${renderAccountBox(provider)}
 
           <div class="detail-actions">
-            ${connectButton}
+            ${installButton}
+            ${quickConnectButton}
+            ${disconnectButton}
             <button type="button" class="secondary" data-copy-mode="local" data-provider-id="${escapeAttribute(provider.id)}">Copy Same Computer</button>
             <button type="button" class="secondary" data-copy-mode="lan" data-provider-id="${escapeAttribute(provider.id)}">Copy Another Device</button>
           </div>
@@ -713,6 +731,18 @@
             ${(provider.notes || []).map((note) => `<li>${escapeHtml(note)}</li>`).join("")}
           </ul>
         </div>`;
+    }
+
+    function getInstallButtonLabel(provider) {
+      if (provider.id === "flightaware") {
+        return "PiAware MLAT (ARM Linux)";
+      }
+
+      if (provider.id === "airplanes-live") {
+        return "Install Official Feeder";
+      }
+
+      return "Install Feeder In WSL";
     }
 
     function renderAccountBox(provider) {
@@ -727,7 +757,7 @@
       const claimLabel = runtime.feederId ? "Open Claim Page" : "Open FlightAware Claim";
       const claimCopy = runtime.feederId
         ? `Sign into your FlightAware account in the browser, then open the claim page for feeder ID ${escapeHtml(runtime.feederId)}.`
-        : "Connect the feeder first, then sign into FlightAware and claim it in the browser.";
+        : "Quick Connect or install the official feeder first, then sign into FlightAware and claim it in the browser.";
 
       return `
         <div class="claim-box">
@@ -757,17 +787,7 @@
         if (selected) {
           renderActivity(`Adding ${providerName}...`);
           feederState = await fetchJson(`/api/feeders/${encodeURIComponent(providerId)}`, { method: "POST", includeKey: true });
-
-          const savedProvider = findProvider(providerId);
-          if (savedProvider?.nativeConnector?.supportsNativeConnector && !savedProvider.nativeConnector.enabled) {
-            renderActivity(`Adding ${providerName}...\n\nTrying to connect it on this computer...`);
-            const payload = await fetchJson(`/api/feeders/${encodeURIComponent(providerId)}/connect`, { method: "POST", includeKey: true });
-            renderActivity(formatPayload(payload));
-          } else if (savedProvider?.nativeConnector?.supportsNativeConnector) {
-            renderActivity(`${providerName} is already connected on this computer.`);
-          } else {
-            renderActivity(`${providerName} was added. Use the settings shown on the card if its own feeder app needs them.`);
-          }
+          renderActivity(`${providerName} was added.\n\nUse Install Official Feeder for the standard MLAT-capable path. Quick Connect is the lightweight Windows-only option.`);
         } else {
           renderActivity(`Removing ${providerName}...`);
 
@@ -794,10 +814,48 @@
       const providerName = provider?.name || "feeder";
 
       setBusy(true);
-      renderActivity(`Connecting ${providerName} on this computer...`);
+      renderActivity(`Quick connecting ${providerName} on this Windows PC...`);
 
       try {
         const payload = await fetchJson(`/api/feeders/${encodeURIComponent(providerId)}/connect`, { method: "POST", includeKey: true });
+        renderActivity(formatPayload(payload));
+        await refreshFeeders();
+        await refreshStatus(false);
+      } catch (error) {
+        renderActivity(error.message);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function disconnectProvider(providerId) {
+      const provider = findProvider(providerId);
+      const providerName = provider?.name || "feeder";
+
+      setBusy(true);
+      renderActivity(`Disconnecting quick connect for ${providerName}...`);
+
+      try {
+        const payload = await fetchJson(`/api/feeders/${encodeURIComponent(providerId)}/disconnect`, { method: "POST", includeKey: true });
+        renderActivity(formatPayload(payload));
+        await refreshFeeders();
+        await refreshStatus(false);
+      } catch (error) {
+        renderActivity(error.message);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function installProvider(providerId) {
+      const provider = findProvider(providerId);
+      const providerName = provider?.name || "feeder";
+
+      setBusy(true);
+      renderActivity(`Installing the official ${providerName} feeder in WSL on this Windows PC...`);
+
+      try {
+        const payload = await fetchJson(`/api/feeders/${encodeURIComponent(providerId)}/install`, { method: "POST", includeKey: true });
         renderActivity(formatPayload(payload));
         await refreshFeeders();
         await refreshStatus(false);
