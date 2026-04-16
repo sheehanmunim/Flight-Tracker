@@ -40,8 +40,8 @@ internal static class FeederProfiles
             Id = "flightradar24",
             Name = "Flightradar24",
             Badge = "Ready now",
-            Summary = "This can use the live Windows receiver feed right away, or you can install the official feeder in WSL from the apps.",
-            InstallHint = "Copy the saved settings for a manual setup, or run Install Official Feeder if you want the WSL package on this Windows PC.",
+            Summary = "This can use the live host feed right away, or you can install the official feeder package when that path is available on this host.",
+            InstallHint = "Copy the saved settings for a manual setup, or run Install Official Feeder when the package-install path is available on this host.",
             SourceLabel = "Primary source: AVR/raw on 30002. Alternate source: Beast on 30005.",
             LocalSettings =
             [
@@ -59,7 +59,7 @@ internal static class FeederProfiles
             ],
             Notes =
             [
-                "Best fit for the current Windows tracker.",
+                "Best fit for the current local host feed.",
                 "Use Beast instead if your FR24 feeder expects Beast TCP."
             ]
         },
@@ -68,9 +68,9 @@ internal static class FeederProfiles
             Id = "flightaware",
             Name = "FlightAware",
             Badge = "Quick Connect or PiAware",
-            Summary = "Quick Connect starts the lightweight uploader on this Windows PC. Install Official Feeder builds and runs PiAware in WSL against Beast on 30005 for the full FlightAware MLAT path.",
-            InstallHint = "Quick Connect is the fast Windows-only uploader. Use Install Official Feeder when you want PiAware and FlightAware MLAT on this Windows PC.",
-            SourceLabel = "Best local MLAT source is Beast on 30005, but the Windows Quick Connect path still uses the local SBS uploader path.",
+            Summary = "Quick Connect starts the lightweight uploader when that path is available on this host. Install Official Feeder uses PiAware against Beast on 30005 for the full FlightAware MLAT path when supported.",
+            InstallHint = "Quick Connect is the fast local uploader path. Use Install Official Feeder when you want PiAware and FlightAware MLAT on a supported host.",
+            SourceLabel = "Best local MLAT source is Beast on 30005, while the lightweight quick-connect path uses the local SBS uploader feed.",
             LocalSettings =
             [
                 new("receiver-type", "relay"),
@@ -87,8 +87,8 @@ internal static class FeederProfiles
             ],
             Notes =
             [
-                "Quick Connect reads the local SBS feed and is useful for a fast ADS-B-only upload from this Windows PC.",
-                "Install Official Feeder now builds and runs PiAware directly inside WSL on this Windows PC.",
+                "Quick Connect reads the local SBS feed and is useful for a fast ADS-B-only upload from this host when the native connector is available.",
+                "Install Official Feeder builds and runs PiAware on hosts that support the standard install path.",
                 "After Quick Connect starts, claim the feeder in your FlightAware account."
             ]
         },
@@ -97,8 +97,8 @@ internal static class FeederProfiles
             Id = "airplanes-live",
             Name = "airplanes.live",
             Badge = "Quick Connect or Official Install",
-            Summary = "Quick Connect starts the lightweight relay on this Windows PC. Install Official Feeder to put the standard airplanes.live runtime in WSL and use the MLAT-capable Beast feed on 30005.",
-            InstallHint = "Use Install Official Feeder for the standard airplanes.live runtime and MLAT path. Quick Connect is the lightweight Windows relay.",
+            Summary = "Quick Connect starts the lightweight relay when that path is available on this host. Install Official Feeder uses the standard airplanes.live runtime and the MLAT-capable Beast feed on 30005 when supported.",
+            InstallHint = "Use Install Official Feeder for the standard airplanes.live runtime and MLAT path on supported hosts. Quick Connect is the lightweight relay path.",
             SourceLabel = "Primary source: Beast on 30005.",
             LocalSettings =
             [
@@ -114,8 +114,8 @@ internal static class FeederProfiles
             ],
             Notes =
             [
-                "Quick Connect relays Beast data directly from this Windows PC to airplanes.live for a lightweight setup.",
-                "Install Official Feeder stops the lightweight relay and installs the standard airplanes.live package in WSL with its MLAT runtime."
+                "Quick Connect relays Beast data directly from this host to airplanes.live for a lightweight setup when the native connector is available.",
+                "Install Official Feeder stops the lightweight relay and installs the standard airplanes.live package with its MLAT runtime on supported hosts."
             ]
         }
     ];

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flight Tracker Chrome Direct Lab</title>
+  <style>
+    :root {
+      --bg: #f3f2ec;
+      --panel: #ffffff;
+      --ink: #111111;
+      --muted: #5d5d5d;
+      --line: #c9c5b8;
+      --accent: #20435c;
+      --warn: #9b4d00;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top right, rgba(32, 67, 92, 0.10), transparent 32%),
+        linear-gradient(180deg, #f7f5ef 0%, #ece8de 100%);
+      min-height: 100vh;
+    }
+
+    .shell {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid var(--line);
+      padding: 18px;
+      box-shadow: 0 12px 28px rgba(17, 17, 17, 0.08);
+    }
+
+    h1, h2, p { margin: 0; }
+
+    .stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .muted {
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .warning {
+      border-left: 4px solid var(--warn);
+      padding-left: 12px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    button,
+    a.button {
+      min-height: 40px;
+      padding: 8px 14px;
+      border: 1px solid var(--ink);
+      text-decoration: none;
+      color: var(--ink);
+      background: #ffffff;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    pre {
+      margin: 0;
+      overflow: auto;
+      padding: 14px;
+      background: #f8f6ef;
+      border: 1px solid var(--line);
+      white-space: pre-wrap;
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="panel stack">
+      <h1>Chrome Direct Lab</h1>
+      <p class="muted">This is the experimental browser-only track for direct USB access in Chromium-based browsers. It can request a USB device and inspect basic descriptors, but the full SDR demodulation and ADS-B decode pipeline is not implemented in the browser yet.</p>
+      <p class="muted warning">Use the Mac or Windows host mode for the working receiver path today. Use this page to explore Chrome-only WebUSB access and to stage a future direct-browser receiver workflow.</p>
+      <div class="actions">
+        <button id="requestUsbBtn" class="primary" type="button">Request USB Device</button>
+        <a id="dashboardLink" class="button" href="/">Open Dashboard</a>
+      </div>
+    </section>
+
+    <section class="panel stack">
+      <h2>Browser Support</h2>
+      <pre id="supportOutput">Checking browser capabilities...</pre>
+    </section>
+
+    <section class="panel stack">
+      <h2>Selected Device</h2>
+      <pre id="deviceOutput">No device selected.</pre>
+    </section>
+
+    <section class="panel stack">
+      <h2>Next Steps</h2>
+      <pre>Planned milestones for this track:
+1. Enumerate compatible RTL-SDR USB devices in Chromium.
+2. Open the USB interface safely from the browser.
+3. Stream IQ data into a worker.
+4. Demodulate ADS-B and decode messages in-browser.
+5. Reuse the dashboard receiver view with a browser-native source.</pre>
+    </section>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const dashboardKey = params.get("key") || window.localStorage.getItem("flight-tracker-dashboard-key") || "";
+    const supportOutput = document.getElementById("supportOutput");
+    const deviceOutput = document.getElementById("deviceOutput");
+    const requestUsbBtn = document.getElementById("requestUsbBtn");
+    const dashboardLink = document.getElementById("dashboardLink");
+
+    if (dashboardKey) {
+      dashboardLink.href = `/?key=${encodeURIComponent(dashboardKey)}`;
+    }
+
+    function describeSupport() {
+      const isSecureContext = window.isSecureContext;
+      const hasUsb = "usb" in navigator;
+      const ua = navigator.userAgent;
+
+      supportOutput.textContent = [
+        `Secure context: ${isSecureContext ? "yes" : "no"}`,
+        `navigator.usb available: ${hasUsb ? "yes" : "no"}`,
+        `User agent: ${ua}`,
+        "",
+        hasUsb
+          ? "WebUSB appears to be available in this browser session."
+          : "WebUSB is not available here. Try a Chromium-based browser on localhost or HTTPS."
+      ].join("\n");
+    }
+
+    requestUsbBtn.addEventListener("click", async () => {
+      if (!("usb" in navigator)) {
+        deviceOutput.textContent = "WebUSB is not available in this browser.";
+        return;
+      }
+
+      try {
+        const device = await navigator.usb.requestDevice({ filters: [] });
+        deviceOutput.textContent = [
+          `Product: ${device.productName || "Unknown"}`,
+          `Manufacturer: ${device.manufacturerName || "Unknown"}`,
+          `Vendor ID: 0x${device.vendorId.toString(16).padStart(4, "0")}`,
+          `Product ID: 0x${device.productId.toString(16).padStart(4, "0")}`,
+          `Serial: ${device.serialNumber || "Unavailable"}`,
+          "",
+          "A device was selected successfully. Direct SDR capture and decode in the browser is the next implementation step."
+        ].join("\n");
+      } catch (error) {
+        deviceOutput.textContent = error && error.message ? error.message : "USB device selection was cancelled or failed.";
+      }
+    });
+
+    describeSupport();
+  </script>
+</body>
+</html>

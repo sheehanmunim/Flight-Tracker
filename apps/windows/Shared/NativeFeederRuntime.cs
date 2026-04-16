@@ -42,7 +42,9 @@ internal static class NativeFeederRuntime
                 Enabled = false,
                 Running = false,
                 StatusLabel = "Profile only",
-                Summary = "This provider currently uses saved profile settings only. Use Install Official Feeder or copy the shown settings.",
+                Summary = OperatingSystem.IsWindows()
+                    ? "This provider currently uses saved profile settings only. Use Install Official Feeder or copy the shown settings."
+                    : "This provider currently shows saved profile settings only on this host. Copy the shown settings or use the local host feed manually.",
                 PrimaryActionLabel = "Not Yet Native",
                 CanConnect = false,
                 CanDisconnect = false
@@ -64,24 +66,24 @@ internal static class NativeFeederRuntime
         {
             statusLabel = isOfficialInstall ? "Official PiAware Running" : "Quick Connected";
             summary = statusFile?.Summary
-                ?? $"Relaying Beast data from {statusFile?.Source ?? "127.0.0.1:30005"} to {statusFile?.Target ?? "the provider"} from this Windows PC.";
+                ?? $"Relaying Beast data from {statusFile?.Source ?? "127.0.0.1:30005"} to {statusFile?.Target ?? "the provider"} from this host.";
         }
         else if (enabled)
         {
             statusLabel = "Starting Quick Connect";
             summary = statusFile?.LastError
                 ?? statusFile?.Summary
-                ?? "The lightweight Windows connector is enabled and will keep retrying until the local feed and provider endpoint are both reachable.";
+                ?? "The lightweight connector is enabled and will keep retrying until the local feed and provider endpoint are both reachable.";
         }
         else if (string.Equals(state, "stopped", StringComparison.OrdinalIgnoreCase))
         {
             statusLabel = "Disconnected";
-            summary = statusFile?.Summary ?? "The lightweight Windows connector is currently stopped.";
+            summary = statusFile?.Summary ?? "The lightweight connector is currently stopped.";
         }
         else
         {
             statusLabel = "Not quick connected";
-            summary = "Use Quick Connect for the lightweight Windows uploader, or Install Official Feeder for the full MLAT-capable path.";
+            summary = "Use Quick Connect for the lightweight uploader, or Install Official Feeder for the full MLAT-capable path when it is supported on this host.";
         }
 
         return new NativeFeederRuntimeStatus
@@ -108,6 +110,11 @@ internal static class NativeFeederRuntime
 
     public static bool SupportsNativeConnector(string providerId)
     {
+        if (!OperatingSystem.IsWindows())
+        {
+            return false;
+        }
+
         return string.Equals(providerId, "airplanes-live", StringComparison.OrdinalIgnoreCase)
             || string.Equals(providerId, "flightaware", StringComparison.OrdinalIgnoreCase);
     }

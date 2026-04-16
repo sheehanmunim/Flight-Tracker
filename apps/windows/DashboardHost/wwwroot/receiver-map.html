@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flight Tracker Receiver View</title>
+  <style>
+    :root {
+      --bg: #f0efe8;
+      --panel: #fffdf7;
+      --ink: #111111;
+      --muted: #5b5b5b;
+      --line: #c7c0b5;
+      --strong: #1d2a38;
+      --accent: #a65a00;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(166, 90, 0, 0.08), transparent 28%),
+        linear-gradient(180deg, #f8f5ed 0%, #ece7dc 100%);
+      min-height: 100vh;
+    }
+
+    .shell {
+      padding: 16px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .hero,
+    .panel {
+      background: rgba(255, 253, 247, 0.96);
+      border: 1px solid var(--line);
+      box-shadow: 0 10px 25px rgba(17, 17, 17, 0.08);
+    }
+
+    .hero {
+      padding: 18px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .hero h1,
+    .panel h2 {
+      margin: 0;
+    }
+
+    .hero p,
+    .panel p,
+    .muted {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      padding: 12px;
+      background: #fffaf0;
+    }
+
+    .stat .label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+
+    .stat .value {
+      margin-top: 6px;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--strong);
+    }
+
+    .panel {
+      padding: 18px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 4px 8px;
+      background: #1d2a38;
+      color: #ffffff;
+      font-size: 12px;
+    }
+
+    .empty {
+      padding: 18px;
+      border: 1px dashed var(--line);
+      color: var(--muted);
+      background: #fffaf0;
+    }
+
+    @media (max-width: 720px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tr {
+        border: 1px solid var(--line);
+        margin-bottom: 10px;
+        background: #fffaf0;
+      }
+
+      td {
+        border-bottom: 0;
+      }
+
+      td::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 4px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <h1>Receiver View</h1>
+      <p>This local browser page reads the current aircraft feed from the host and refreshes every few seconds. It is used automatically on the Mac host path and also works as a fallback receiver view anywhere the dashboard can reach the local feed.</p>
+      <div class="stats">
+        <div class="stat">
+          <div class="label">Tracked Aircraft</div>
+          <div id="aircraftCount" class="value">0</div>
+        </div>
+        <div class="stat">
+          <div class="label">Messages</div>
+          <div id="messageCount" class="value">0</div>
+        </div>
+        <div class="stat">
+          <div class="label">Updated</div>
+          <div id="updatedAt" class="value">Waiting</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Live Aircraft</h2>
+      <p class="muted">Aircraft without a current position still appear here so you can confirm the decoder is active even before a full position solution is available.</p>
+      <div id="tableHost"></div>
+    </section>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const dashboardKey = params.get("key") || window.localStorage.getItem("flight-tracker-dashboard-key") || "";
+    const aircraftCount = document.getElementById("aircraftCount");
+    const messageCount = document.getElementById("messageCount");
+    const updatedAt = document.getElementById("updatedAt");
+    const tableHost = document.getElementById("tableHost");
+
+    async function loadAircraft() {
+      const headers = {};
+      if (dashboardKey) {
+        headers["X-FlightTracker-Key"] = dashboardKey;
+      }
+
+      const response = await fetch("/api/receiver/aircraft", { headers });
+      if (!response.ok) {
+        throw new Error(`Receiver data request failed with ${response.status}.`);
+      }
+
+      return await response.json();
+    }
+
+    function renderTable(payload) {
+      const aircraft = [...(payload.aircraft || [])]
+        .sort((left, right) => (right.seen || 0) - (left.seen || 0))
+        .slice(0, 50);
+
+      aircraftCount.textContent = String(aircraft.length);
+      messageCount.textContent = String(payload.messages || 0);
+      updatedAt.textContent = new Date().toLocaleTimeString();
+
+      if (!aircraft.length) {
+        tableHost.innerHTML = "<div class='empty'>No aircraft are visible yet. If the SDR is connected, give the receiver a moment to collect frames.</div>";
+        return;
+      }
+
+      tableHost.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Flight</th>
+              <th>Hex</th>
+              <th>Altitude</th>
+              <th>Speed</th>
+              <th>Track</th>
+              <th>Position</th>
+              <th>Seen</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${aircraft.map(renderAircraftRow).join("")}
+          </tbody>
+        </table>`;
+    }
+
+    function renderAircraftRow(aircraft) {
+      const flight = (aircraft.flight || "").trim() || "Unknown";
+      const hex = (aircraft.hex || "").toUpperCase() || "N/A";
+      const altitude = aircraft.alt_baro ?? aircraft.alt_geom ?? "N/A";
+      const speed = aircraft.gs ?? aircraft.tas ?? "N/A";
+      const track = aircraft.track ?? "N/A";
+      const lat = Number.isFinite(aircraft.lat) ? aircraft.lat.toFixed(4) : "";
+      const lon = Number.isFinite(aircraft.lon) ? aircraft.lon.toFixed(4) : "";
+      const position = lat && lon ? `${lat}, ${lon}` : "No fix";
+      const seen = typeof aircraft.seen === "number" ? `${aircraft.seen.toFixed(1)}s ago` : "N/A";
+
+      return `
+        <tr>
+          <td data-label="Flight"><span class="pill">${escapeHtml(flight)}</span></td>
+          <td data-label="Hex">${escapeHtml(hex)}</td>
+          <td data-label="Altitude">${escapeHtml(String(altitude))}</td>
+          <td data-label="Speed">${escapeHtml(String(speed))}</td>
+          <td data-label="Track">${escapeHtml(String(track))}</td>
+          <td data-label="Position">${escapeHtml(position)}</td>
+          <td data-label="Seen">${escapeHtml(seen)}</td>
+        </tr>`;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll("\"", "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    async function refresh() {
+      try {
+        const payload = await loadAircraft();
+        renderTable(payload);
+      } catch (error) {
+        tableHost.innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`;
+      }
+    }
+
+    refresh();
+    window.setInterval(refresh, 5000);
+  </script>
+</body>
+</html>

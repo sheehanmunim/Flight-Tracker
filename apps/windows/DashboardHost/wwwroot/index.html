@@ -427,7 +427,7 @@
     <header class="topbar">
       <div class="title-block">
         <h1>Flight Tracker</h1>
-        <p>One screen for the live map and feeder setup. The browser app, Windows app, and Mac app all control this same Windows receiver PC.</p>
+        <p>One screen for the live receiver view and feeder setup. Use it from the local host browser or from another device on your LAN.</p>
       </div>
 
       <div class="key-box">
@@ -443,8 +443,8 @@
       <section class="panel">
         <div class="panel-head">
           <div>
-            <h2>Live Map</h2>
-            <p>This is the local aircraft map from the Windows receiver PC running the tracker.</p>
+            <h2>Receiver View</h2>
+            <p>This shows the live receiver output from the local host. On macOS it uses the built-in browser receiver page when no standalone map server is available.</p>
           </div>
           <a id="mapLink" class="link-button" href="#" target="_blank" rel="noreferrer">Open In New Tab</a>
         </div>
@@ -481,13 +481,13 @@
       <aside class="panel sidebar">
         <section class="sidebar-section">
           <h2>Feeders</h2>
-          <p>Add a network, then choose Quick Connect for the lightweight Windows uploader or Install Official Feeder for the standard WSL setup. Use the official install when you want MLAT.</p>
+          <p>Add a network, then use the local quick-connect or official install path when they are available on this host. Manual copy settings are always shown.</p>
           <div id="feedersList" class="feeders-list"></div>
         </section>
 
         <section class="sidebar-section">
           <h2>Activity</h2>
-          <p>The latest action or status result from this Windows receiver PC shows here.</p>
+          <p>The latest action or status result from this local host shows here.</p>
           <div id="activity" class="activity">Loading...</div>
         </section>
       </aside>
@@ -514,7 +514,7 @@
     const queryKey = params.get("key") || "";
     let dashboardKey = queryKey || storedKey;
     let feederState = { providers: [], selectedIds: [], lanHost: window.location.hostname };
-    let metaState = { lanUrl: "", mapUrl: "", usbNote: "" };
+    let metaState = { lanUrl: "", mapUrl: "", chromeDirectUrl: "", usbNote: "", hostKind: "" };
     let refreshHandle = 0;
     let uiBusy = false;
 
@@ -571,7 +571,7 @@
         mapLink.href = meta.mapUrl || fallbackMapUrl;
         mapFrame.src = meta.mapUrl || fallbackMapUrl;
       } catch (error) {
-        metaState = { lanUrl: "", mapUrl: fallbackMapUrl, usbNote: "" };
+        metaState = { lanUrl: "", mapUrl: fallbackMapUrl, chromeDirectUrl: "", usbNote: "", hostKind: "" };
         usbNote.textContent = "Save the access key if the receiver details do not load.";
         mapLink.href = fallbackMapUrl;
         mapFrame.src = fallbackMapUrl;
@@ -691,13 +691,19 @@
 
     function renderProviderDetails(provider) {
       const runtime = provider.nativeConnector || {};
-      const quickConnectButton = runtime.supportsNativeConnector && !runtime.enabled
+      const managedActionsSupported = metaState.hostKind === "windows";
+      const quickConnectButton = managedActionsSupported && runtime.supportsNativeConnector && !runtime.enabled
         ? `<button type="button" class="secondary" data-connect-provider data-provider-id="${escapeAttribute(provider.id)}">Quick Connect</button>`
         : "";
-      const disconnectButton = runtime.supportsNativeConnector && runtime.enabled
+      const disconnectButton = managedActionsSupported && runtime.supportsNativeConnector && runtime.enabled
         ? `<button type="button" class="secondary" data-disconnect-provider data-provider-id="${escapeAttribute(provider.id)}">Disconnect Quick Connect</button>`
         : "";
-      const installButton = `<button type="button" class="primary" data-install-provider data-provider-id="${escapeAttribute(provider.id)}">${escapeHtml(getInstallButtonLabel(provider))}</button>`;
+      const installButton = managedActionsSupported
+        ? `<button type="button" class="primary" data-install-provider data-provider-id="${escapeAttribute(provider.id)}">${escapeHtml(getInstallButtonLabel(provider))}</button>`
+        : "";
+      const hostGuidance = !managedActionsSupported
+        ? `<div class="detail-block"><h3>Host Support</h3><p><strong>Manual host path</strong><br>This host currently exposes the local feed ports and browser receiver view, but managed feeder install and quick-connect actions are not available here yet.</p></div>`
+        : "";
 
       return `
         <div class="provider-details">
@@ -705,6 +711,8 @@
             <h3>Status</h3>
             <p><strong>${escapeHtml(runtime.statusLabel || "Saved")}</strong><br>${escapeHtml(runtime.summary || provider.installHint || "")}</p>
           </div>
+
+          ${hostGuidance}
 
           <div class="settings-grid">
             <div class="settings-box">
@@ -787,7 +795,10 @@
         if (selected) {
           renderActivity(`Adding ${providerName}...`);
           feederState = await fetchJson(`/api/feeders/${encodeURIComponent(providerId)}`, { method: "POST", includeKey: true });
-          renderActivity(`${providerName} was added.\n\nUse Install Official Feeder for the standard MLAT-capable path. Quick Connect is the lightweight Windows-only option.`);
+          const hostMessage = metaState.hostKind === "windows"
+            ? "Use the official install path for the standard MLAT-capable setup when it is available on this host. Quick Connect stays the lightweight option."
+            : "This host path focuses on the local receiver and browser dashboard first. Copy the shown settings for manual feeder setup from this machine.";
+          renderActivity(`${providerName} was added.\n\n${hostMessage}`);
         } else {
           renderActivity(`Removing ${providerName}...`);
 
@@ -814,7 +825,7 @@
       const providerName = provider?.name || "feeder";
 
       setBusy(true);
-      renderActivity(`Quick connecting ${providerName} on this Windows PC...`);
+      renderActivity(`Quick connecting ${providerName} on this host...`);
 
       try {
         const payload = await fetchJson(`/api/feeders/${encodeURIComponent(providerId)}/connect`, { method: "POST", includeKey: true });
@@ -852,7 +863,7 @@
       const providerName = provider?.name || "feeder";
 
       setBusy(true);
-      renderActivity(`Installing the official ${providerName} feeder in WSL on this Windows PC...`);
+      renderActivity(`Installing the official ${providerName} feeder on this host...`);
 
       try {
         const payload = await fetchJson(`/api/feeders/${encodeURIComponent(providerId)}/install`, { method: "POST", includeKey: true });

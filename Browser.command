@@ -8,6 +8,13 @@ PORT=5099
 KEY_FILE="$ROOT/logs/dashboard.key"
 HOST_LOG="$ROOT/logs/dashboard-host.log"
 MAC_URL_FILE="$ROOT/macOS/flight-tracker-url.txt"
+OPEN_BROWSER=1
+
+for arg in "$@"; do
+  if [[ "$arg" == "--no-open" ]]; then
+    OPEN_BROWSER=0
+  fi
+done
 
 mkdir -p "$ROOT/logs" "$ROOT/macOS"
 
@@ -18,7 +25,7 @@ if ! command -v dotnet >/dev/null 2>&1; then
 fi
 
 echo "Starting the local tracker runtime..."
-"$TRACKER_START" -NoBrowser
+bash "$TRACKER_START" -NoBrowser
 
 if ! lsof -nP -iTCP:$PORT -sTCP:LISTEN >/dev/null 2>&1; then
   nohup dotnet run --project "$PROJECT" -c Release -- --no-browser --urls "http://0.0.0.0:$PORT" >"$HOST_LOG" 2>&1 &
@@ -55,4 +62,6 @@ echo
 echo "Share this LAN URL:"
 echo "http://$LAN_IP:$PORT/?key=$DASHBOARD_KEY"
 
-open "http://localhost:$PORT/?key=$DASHBOARD_KEY"
+if [[ "$OPEN_BROWSER" == "1" ]]; then
+  open "http://localhost:$PORT/?key=$DASHBOARD_KEY"
+fi

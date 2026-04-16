@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using FlightTracker.Shared;
@@ -40,17 +41,20 @@ app.Use(async (context, next) =>
 app.MapGet("/api/meta", (HttpRequest request) =>
 {
     var host = request.Host.Host;
-    var mapUrl = $"http://{host}:8080";
-    var lanUrl = $"http://{host}:5099/?key={dashboardKey}";
+    var baseUrl = $"{request.Scheme}://{request.Host}";
+    var mapUrl = HostPlatform.GetMapUrl(request, dashboardKey);
+    var lanUrl = $"{baseUrl}/?key={dashboardKey}";
 
     return Results.Json(new
     {
+        hostKind = HostPlatform.Kind,
         hostOs = Environment.OSVersion.ToString(),
         repoRoot,
         mapUrl,
         lanUrl,
-        usbNote = "The browser dashboard can control the Windows receiver PC, but the RTL-SDR still has to stay attached to the Windows PC running the decoder.",
-        beastNote = "Port 30005 now carries real decoder timestamps. Use Install Official Feeder for the full MLAT path."
+        chromeDirectUrl = HostPlatform.GetChromeDirectUrl(request, dashboardKey),
+        usbNote = HostPlatform.GetUsbNote(),
+        beastNote = HostPlatform.GetBeastNote()
     });
 });
 
@@ -73,36 +77,33 @@ app.MapDelete("/api/feeders/{id}", (string id, HttpRequest request) =>
 
 app.MapPost("/api/feeders/{id}/install", async (string id) =>
 {
-    var installFeederScript = Path.Combine(repoRoot, "scripts", "Install-Feeder.ps1");
-    var result = await ScriptRunner.RunPowerShellScriptAsync(repoRoot, installFeederScript, $"-Provider {id}");
+    var result = await ScriptRunner.RunLocalScriptAsync(repoRoot, "Install-Feeder", $"-Provider {id}");
     return Results.Json(result);
 });
 
 app.MapPost("/api/feeders/{id}/connect", async (string id) =>
 {
-    var nativeFeederScript = Path.Combine(repoRoot, "scripts", "Manage-NativeFeeder.ps1");
-    var result = await ScriptRunner.RunPowerShellScriptAsync(repoRoot, nativeFeederScript, $"-Provider {id} -Action Connect");
+    var result = await ScriptRunner.RunLocalScriptAsync(repoRoot, "Manage-NativeFeeder", $"-Provider {id} -Action Connect");
     return Results.Json(result);
 });
 
 app.MapPost("/api/feeders/{id}/disconnect", async (string id) =>
 {
-    var nativeFeederScript = Path.Combine(repoRoot, "scripts", "Manage-NativeFeeder.ps1");
-    var result = await ScriptRunner.RunPowerShellScriptAsync(repoRoot, nativeFeederScript, $"-Provider {id} -Action Disconnect");
+    var result = await ScriptRunner.RunLocalScriptAsync(repoRoot, "Manage-NativeFeeder", $"-Provider {id} -Action Disconnect");
     return Results.Json(result);
 });
 
 app.MapGet("/api/status", async () =>
 {
-    var result = await ScriptRunner.RunPowerShellScriptAsync(repoRoot, Path.Combine(repoRoot, "scripts", "Status-LocalFlightTracker.ps1"));
+    var result = await ScriptRunner.RunLocalScriptAsync(repoRoot, "Status-LocalFlightTracker");
     return Results.Json(result);
 });
 
 app.MapPost("/api/start", async () =>
 {
-    var result = await ScriptRunner.RunPowerShellScriptAsync(
+    var result = await ScriptRunner.RunLocalScriptAsync(
         repoRoot,
-        Path.Combine(repoRoot, "scripts", "Start-LocalFlightTracker.ps1"),
+        "Start-LocalFlightTracker",
         "-NoBrowser");
 
     return Results.Json(result);
@@ -110,14 +111,20 @@ app.MapPost("/api/start", async () =>
 
 app.MapPost("/api/stop", async () =>
 {
-    var result = await ScriptRunner.RunPowerShellScriptAsync(repoRoot, Path.Combine(repoRoot, "scripts", "Stop-LocalFlightTracker.ps1"));
+    var result = await ScriptRunner.RunLocalScriptAsync(repoRoot, "Stop-LocalFlightTracker");
     return Results.Json(result);
 });
 
 app.MapPost("/api/host-check", async () =>
 {
-    var result = await ScriptRunner.RunPowerShellScriptAsync(repoRoot, Path.Combine(repoRoot, "scripts", "Test-FlightTrackerHost.ps1"));
+    var result = await ScriptRunner.RunLocalScriptAsync(repoRoot, "Test-FlightTrackerHost");
     return Results.Json(result);
+});
+
+app.MapGet("/api/receiver/aircraft", async () =>
+{
+    var json = await ReceiverDataApi.LoadAircraftJsonAsync(repoRoot);
+    return Results.Text(json, "application/json", Encoding.UTF8);
 });
 
 app.MapGet("/api/logs/{name}", async (string name) =>
@@ -125,6 +132,7 @@ app.MapGet("/api/logs/{name}", async (string name) =>
     var allowed = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
     {
         ["dump1090"] = Path.Combine(repoRoot, "logs", "dump1090.log"),
+        ["readsb"] = Path.Combine(repoRoot, "logs", "readsb.log"),
         ["beast"] = Path.Combine(repoRoot, "logs", "beast-bridge.log"),
         ["flightaware"] = Path.Combine(repoRoot, "logs", "flightaware.log"),
         ["airplanes-live"] = Path.Combine(repoRoot, "logs", "airplanes-live.log")
@@ -170,7 +178,9 @@ static class RepoPaths
             while (current is not null)
             {
                 var hasRootMarker = File.Exists(Path.Combine(current.FullName, "flight-tracker-root.marker"));
-                var hasScripts = File.Exists(Path.Combine(current.FullName, "scripts", "Start-LocalFlightTracker.ps1"));
+                var hasScripts =
+                    File.Exists(Path.Combine(current.FullName, "scripts", "Start-LocalFlightTracker.ps1"))
+                    || File.Exists(Path.Combine(current.FullName, "scripts", "Start-LocalFlightTracker.sh"));
 
                 if (hasScripts && hasRootMarker)
                 {
@@ -214,23 +224,46 @@ static class RepoPaths
 
 internal static class ScriptRunner
 {
-    public static async Task<ScriptResult> RunPowerShellScriptAsync(string repoRoot, string scriptPath, string extraArgs = "")
+    public static async Task<ScriptResult> RunLocalScriptAsync(string repoRoot, string scriptBaseName, string extraArgs = "")
     {
-        if (!OperatingSystem.IsWindows())
+        var scriptPath = HostPlatform.ResolveScriptPath(repoRoot, scriptBaseName);
+        if (scriptPath is null)
         {
-            return new ScriptResult(false, "", "Local script execution is only supported on the Windows receiver PC.", -1);
+            return new ScriptResult(false, "", "Local host scripts are not available for this platform yet.", -1);
         }
 
-        var psi = new ProcessStartInfo
+        ProcessStartInfo psi;
+
+        if (OperatingSystem.IsWindows())
         {
-            FileName = "powershell.exe",
-            Arguments = $"-ExecutionPolicy Bypass -File \"{scriptPath}\" {extraArgs}".Trim(),
-            WorkingDirectory = repoRoot,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
+            psi = new ProcessStartInfo
+            {
+                FileName = "powershell.exe",
+                Arguments = $"-ExecutionPolicy Bypass -File \"{scriptPath}\" {extraArgs}".Trim(),
+                WorkingDirectory = repoRoot,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+        }
+        else if (OperatingSystem.IsMacOS())
+        {
+            psi = new ProcessStartInfo
+            {
+                FileName = "/bin/bash",
+                Arguments = $"\"{scriptPath}\" {extraArgs}".Trim(),
+                WorkingDirectory = repoRoot,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+        }
+        else
+        {
+            return new ScriptResult(false, "", "Local script execution is not supported on this platform.", -1);
+        }
 
         using var process = new Process { StartInfo = psi };
         process.Start();
@@ -248,6 +281,72 @@ internal static class ScriptRunner
 }
 
 internal sealed record ScriptResult(bool Ok, string Output, string Error, int ExitCode);
+
+internal static class HostPlatform
+{
+    public static string Kind =>
+        OperatingSystem.IsWindows() ? "windows"
+        : OperatingSystem.IsMacOS() ? "macos"
+        : "unsupported";
+
+    public static string? ResolveScriptPath(string repoRoot, string scriptBaseName)
+    {
+        var extension =
+            OperatingSystem.IsWindows() ? ".ps1"
+            : OperatingSystem.IsMacOS() ? ".sh"
+            : string.Empty;
+
+        if (string.IsNullOrEmpty(extension))
+        {
+            return null;
+        }
+
+        var path = Path.Combine(repoRoot, "scripts", scriptBaseName + extension);
+        return File.Exists(path) ? path : null;
+    }
+
+    public static string GetMapUrl(HttpRequest request, string dashboardKey)
+    {
+        var baseUrl = $"{request.Scheme}://{request.Host}";
+        if (OperatingSystem.IsWindows())
+        {
+            return $"http://{request.Host.Host}:8080";
+        }
+
+        return $"{baseUrl}/receiver-map.html?key={Uri.EscapeDataString(dashboardKey)}";
+    }
+
+    public static string GetChromeDirectUrl(HttpRequest request, string dashboardKey)
+    {
+        var baseUrl = $"{request.Scheme}://{request.Host}";
+        return $"{baseUrl}/chrome-direct.html?key={Uri.EscapeDataString(dashboardKey)}";
+    }
+
+    public static string GetUsbNote()
+    {
+        if (OperatingSystem.IsMacOS())
+        {
+            return "The RTL-SDR can stay attached to this Mac host. Install a local decoder such as readsb on the Mac when you want the browser dashboard to control it directly.";
+        }
+
+        if (OperatingSystem.IsWindows())
+        {
+            return "The browser dashboard can control the local host directly. Keep the RTL-SDR attached to the same machine that is running the decoder.";
+        }
+
+        return "Host-specific USB control is not available on this platform yet.";
+    }
+
+    public static string GetBeastNote()
+    {
+        if (OperatingSystem.IsMacOS())
+        {
+            return "Mac host mode exposes the local receiver feed on the standard ports when a compatible decoder is installed. The Chrome Direct page is still experimental.";
+        }
+
+        return "Port 30005 carries real decoder timestamps. Use Install Official Feeder for the full MLAT path when it is available on this host.";
+    }
+}
 
 internal sealed record DashboardHostOptions(string ListenUrl, bool OpenBrowser)
 {
@@ -310,18 +409,41 @@ internal static class HostStartupTasks
             Console.WriteLine($"Could not update the Mac launcher URL file: {ex.Message}");
         }
 
-        if (!options.OpenBrowser || !OperatingSystem.IsWindows())
+        if (!options.OpenBrowser)
         {
             return;
         }
 
+        BrowserLauncher.TryOpen(localUrl);
+    }
+}
+
+internal static class BrowserLauncher
+{
+    public static void TryOpen(string url)
+    {
         try
         {
-            Process.Start(new ProcessStartInfo
+            if (OperatingSystem.IsWindows())
             {
-                FileName = localUrl,
-                UseShellExecute = true
-            });
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = url,
+                    UseShellExecute = true
+                });
+                return;
+            }
+
+            if (OperatingSystem.IsMacOS())
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "open",
+                    Arguments = $"\"{url}\"",
+                    UseShellExecute = false
+                });
+                return;
+            }
         }
         catch (Exception ex)
         {
@@ -372,5 +494,38 @@ internal static class FeederApi
         }
 
         return FeederProfiles.GetLanHost();
+    }
+}
+
+internal static class ReceiverDataApi
+{
+    private static readonly HttpClient HttpClient = new()
+    {
+        Timeout = TimeSpan.FromSeconds(3)
+    };
+
+    private const string EmptyAircraftPayload = """{"now":0,"messages":0,"aircraft":[]}""";
+
+    public static async Task<string> LoadAircraftJsonAsync(string repoRoot)
+    {
+        var readsbPath = Path.Combine(repoRoot, "logs", "readsb-data", "aircraft.json");
+        if (File.Exists(readsbPath))
+        {
+            return await File.ReadAllTextAsync(readsbPath);
+        }
+
+        try
+        {
+            var response = await HttpClient.GetAsync("http://127.0.0.1:8080/data/aircraft.json");
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadAsStringAsync();
+            }
+        }
+        catch
+        {
+        }
+
+        return EmptyAircraftPayload;
     }
 }
