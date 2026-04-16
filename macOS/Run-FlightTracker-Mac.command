@@ -2,19 +2,12 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-CONFIG_FILE="$SCRIPT_DIR/flight-tracker-url.txt"
+APP_BUNDLE="$SCRIPT_DIR/../.build/macos/Flight Tracker.app"
 
-if [[ ! -f "$CONFIG_FILE" ]]; then
-  cat >"$CONFIG_FILE" <<'EOF'
-http://YOUR-WINDOWS-HOST:5099/?key=REPLACE_ME
-EOF
-fi
-
-URL="$(tr -d '\r' < "$CONFIG_FILE" | head -n 1)"
-
-if [[ -z "$URL" || "$URL" == *"REPLACE_ME"* ]]; then
-  osascript -e 'display dialog "Edit macOS/flight-tracker-url.txt with the shared dashboard URL from your Windows host, then run Run-FlightTracker-Mac.command again." buttons {"OK"} default button "OK"'
+if [[ ! -d "$APP_BUNDLE" ]]; then
+  echo "Flight Tracker.app was not found in .build/macos."
+  echo "Run ./Mac-DMG.command on a Mac first, then run this helper again."
   exit 1
 fi
 
-open "$URL"
+open "$APP_BUNDLE"

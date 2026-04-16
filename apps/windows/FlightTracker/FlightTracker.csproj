@@ -9,7 +9,6 @@
     <ApplicationIcon>..\..\..\vendor\Dump1090\src\dump1090.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\Shared\FeederProfiles.cs" Link="Shared\FeederProfiles.cs" />
-    <Compile Include="..\Shared\NativeFeederRuntime.cs" Link="Shared\NativeFeederRuntime.cs" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3912.50" />
   </ItemGroup>
 </Project>

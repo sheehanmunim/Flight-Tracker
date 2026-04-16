@@ -7,7 +7,8 @@ If you just want to use Flight Tracker and not work inside the repo:
 1. Download `FlightTracker-Setup.exe` from the latest build or release.
 2. Run the installer.
 3. Launch `Flight Tracker` from the Start Menu or desktop shortcut.
-4. Plug the RTL-SDR USB dongle into that same Windows machine.
+4. Use the dedicated Windows app window with the dashboard embedded inside it.
+5. Plug the RTL-SDR USB dongle into that same Windows machine.
 
 If you want the browser-host mode instead:
 
@@ -19,7 +20,8 @@ If you want the Mac client:
 
 1. Download the Mac DMG.
 2. Open the app on the Mac.
-3. Paste the shared dashboard URL from the Windows host when prompted.
+3. Paste the shared or local dashboard URL into the app when prompted.
+4. Use the dedicated Mac app window with the dashboard embedded inside it.
 
 ## From Source
 
@@ -64,3 +66,4 @@ The browser-only receiver path decodes ADS-B directly in the page with WebUSB. I
 - The RTL-SDR USB dongle
 - The dump1090 and RTL-SDR binaries, which are already bundled in this repo/package
 - In some setups, the correct RTL-SDR driver on first use
+- The dedicated Windows app uses WebView2 to render the dashboard inside the app window.

@@ -1,14 +1,15 @@
 # Flight Tracker
 
-Flight Tracker can run as a local receiver host with a browser dashboard, plus remote helper apps:
+Flight Tracker can run in three distinct ways:
 
-- `Browser`: a local web dashboard started with `Browser.cmd` on Windows or `Browser.command` on macOS
-- `Windows app`: the packaged Windows launcher/app
-- `Mac app`: a remote dashboard client that talks to a shared host
+- `Windows app`: a dedicated native Windows app with the dashboard embedded inside the app window
+- `Mac app`: a dedicated native Mac app with the dashboard embedded inside the app window
+- `Browser`: the browser-host path started with `Browser.cmd` on Windows or `Browser.command` on macOS
+- `Browser-only receiver`: the Chromium/WebUSB path at `chrome-direct.html`
 
-The browser-host path runs the decoder on the same machine that has the RTL-SDR attached. The packaged Mac app remains a remote client for a shared host.
+The native Windows app and native Mac app no longer need to hand off to the system browser for the main dashboard view. The browser-host path is separate and remains available when you specifically want the web UI in a normal browser.
 
-There are also standalone Mac browser and Chromium app paths now:
+There are also standalone Mac browser and Chromium launcher paths now:
 
 - `Browser.command` starts the browser dashboard on a Mac and drives a local `readsb` decoder on that same Mac
 - `Chromium.command` starts the local Mac host and opens the dashboard in a standalone Chromium-family app window
@@ -38,17 +39,17 @@ There is one real receiver/decoder host:
 - on `macOS`, the local browser-host path uses `readsb` and will auto-install it through Homebrew on first run when Homebrew is available
 - the host serves the local aircraft view and exposes local feed outputs for feeder software
 
-The three frontends are just different ways to control the same host:
+The three app surfaces are different ways to control the same host:
 
-- `Browser.cmd` starts the tracker runtime and opens the web dashboard
-- the `Windows app` is a native launcher/control app for the Windows host path
-- the `Mac app` is a remote client for a shared host and uses the shared dashboard URL
+- `Browser.cmd` starts the tracker runtime and opens the web dashboard in the system browser
+- the `Windows app` starts or connects to the local dashboard host and renders it inside the native Windows app window
+- the `Mac app` renders the configured dashboard URL inside the native Mac app window instead of opening the system browser
 
-The Mac app does not decode ADS-B by itself. It controls a shared host over the dashboard URL.
+The Mac app does not decode ADS-B by itself. It shows the configured dashboard URL inside the native app window. That URL can point to a shared host or a local Mac host, depending on how you use it.
 
-The new Mac browser-host path is different from the remote Mac app:
+The Mac browser-host path is different from the dedicated Mac app:
 
-- the `Mac app` is still a remote client for a shared host
+- the `Mac app` is a dedicated native shell around a configured dashboard URL
 - `Browser.command` makes the Mac itself the local host and can bootstrap `readsb` automatically when Homebrew is present and the RTL-SDR is plugged into that Mac
 
 Important Chromium note:
@@ -123,7 +124,7 @@ Example config files:
 
 1. Start the shared host with `Browser.cmd` on Windows or `Browser.command` on macOS.
 2. Build the Mac app with `./Mac-DMG.command` on a Mac.
-3. Open the Mac app and use the shared dashboard URL if prompted.
+3. Open the Mac app and paste the shared or local dashboard URL into the app if prompted.
 
 The packaged Mac app stores its shared dashboard URL in:
 
@@ -131,8 +132,8 @@ The packaged Mac app stores its shared dashboard URL in:
 
 ## Repo Layout
 
-- `Browser.cmd`: start the Windows tracker runtime and browser dashboard
-- `Browser.command`: start the local Mac tracker runtime and browser dashboard
+- `Browser.cmd`: start the Windows tracker runtime and browser dashboard in the system browser
+- `Browser.command`: start the local Mac tracker runtime and browser dashboard in the system browser
 - `Chromium.command`: open the standalone Chromium-family app window for the local dashboard
 - `Chrome-Direct.command`: compatibility alias for `Chromium.command`
 - `Windows-EXE.cmd`: build `FlightTracker-Setup.exe`
@@ -156,6 +157,7 @@ Releases are published by pushing a tag like `v1.0.0`.
 ## Notes
 
 - The RTL-SDR dongle must stay attached to whichever machine is running the local decoder.
+- The Windows app and Mac app now embed the dashboard inside the native app window instead of launching the main dashboard in the system browser.
 - The browser dashboard, Windows app, and Mac app are all control surfaces for the same local or shared host.
 - The browser-only receiver page can decode directly from the USB dongle in Chromium without the native Windows or Mac decoder, but it still needs WebUSB support and a secure browser context.
 - On macOS, `Browser.command` and `Chromium.command` will try to install `readsb` automatically with Homebrew if it is missing.

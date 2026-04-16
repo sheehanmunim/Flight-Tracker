@@ -3,7 +3,7 @@
 ## Top Level
 
 - `README.md`: product-level overview and quick links
-- `Browser.cmd`: browser dashboard entrypoint
+- `Browser.cmd`: browser dashboard entrypoint for the system browser path
 - `Windows-EXE.cmd`: Windows installer build entrypoint
 - `Mac-DMG.command`: Mac DMG build entrypoint
 - `apps/`: app source code
@@ -17,7 +17,7 @@
 
 ## apps/windows
 
-- `FlightTracker/`: WinForms desktop launcher source
+- `FlightTracker/`: WinForms desktop app source with the embedded dashboard shell
 - `DashboardHost/`: browser dashboard host source
 - `Shared/`: shared C# feeder/runtime code
 

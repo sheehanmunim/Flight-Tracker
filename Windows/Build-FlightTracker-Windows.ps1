@@ -264,7 +264,7 @@ Simple choices:
   Desktop\FlightTracker.exe
   Browser.cmd
 
-Desktop launcher:
+Desktop app:
   Desktop\FlightTracker.exe
 
 Browser dashboard host:
@@ -275,11 +275,12 @@ Package mode:
   Dashboard host: $dashboardMode
 
 Notes:
+  - Desktop\FlightTracker.exe now embeds the dashboard inside the native Windows app window.
   - If package mode says 'existing framework-dependent build', install the .NET 8 Desktop Runtime
     and ASP.NET Core Runtime on the target Windows machine before launching the EXEs.
   - All supporting scripts, feeder configs, and SDR binaries are bundled beside the EXEs in this folder.
   - Friendly docs are included in the docs folder.
-  - The Mac launcher URL template is available in macOS\flight-tracker-url.txt.
+  - The Mac app URL template is available in macOS\flight-tracker-url.txt.
 "@
 
 Set-Content -LiteralPath (Join-Path $packageRoot "PACKAGE-README.txt") -Value $packageReadme

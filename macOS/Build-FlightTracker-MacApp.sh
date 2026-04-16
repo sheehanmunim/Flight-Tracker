@@ -6,8 +6,12 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 BUILD_DIR="$REPO_ROOT/.build/macos"
 APP_NAME="Flight Tracker"
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
+CONTENTS_DIR="$APP_BUNDLE/Contents"
+MACOS_DIR="$CONTENTS_DIR/MacOS"
+RESOURCES_DIR="$CONTENTS_DIR/Resources"
 DMG_PATH="$REPO_ROOT/FlightTracker.dmg"
 DMG_STAGING_DIR="$BUILD_DIR/dmg-root"
+EXECUTABLE_PATH="$MACOS_DIR/FlightTracker"
 
 require_tool() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -16,34 +20,58 @@ require_tool() {
   fi
 }
 
-require_tool osacompile
+require_tool swiftc
 require_tool hdiutil
 
-set_plist_value() {
-  local plist_path="$1"
-  local key="$2"
-  local value="$3"
-
-  if ! /usr/libexec/PlistBuddy -c "Set :$key $value" "$plist_path" >/dev/null 2>&1; then
-    /usr/libexec/PlistBuddy -c "Add :$key string $value" "$plist_path"
-  fi
-}
-
 rm -rf "$APP_BUNDLE" "$DMG_STAGING_DIR" "$DMG_PATH"
-mkdir -p "$BUILD_DIR" "$DMG_STAGING_DIR"
+mkdir -p "$MACOS_DIR" "$RESOURCES_DIR" "$DMG_STAGING_DIR"
 
-osacompile -o "$APP_BUNDLE" "$SCRIPT_DIR/FlightTrackerLauncher.applescript"
+swiftc \
+  -framework Cocoa \
+  -framework WebKit \
+  "$SCRIPT_DIR/FlightTrackerApp.swift" \
+  -o "$EXECUTABLE_PATH"
 
-mkdir -p "$APP_BUNDLE/Contents/Resources"
-cp "$SCRIPT_DIR/default-flight-tracker-url.txt" "$APP_BUNDLE/Contents/Resources/default-flight-tracker-url.txt"
+chmod +x "$EXECUTABLE_PATH"
+cp "$SCRIPT_DIR/default-flight-tracker-url.txt" "$RESOURCES_DIR/default-flight-tracker-url.txt"
 
-if [ -x /usr/libexec/PlistBuddy ]; then
-  set_plist_value "$APP_BUNDLE/Contents/Info.plist" "CFBundleName" "$APP_NAME"
-  set_plist_value "$APP_BUNDLE/Contents/Info.plist" "CFBundleDisplayName" "$APP_NAME"
-  set_plist_value "$APP_BUNDLE/Contents/Info.plist" "CFBundleIdentifier" "com.flighttracker.launcher"
-  set_plist_value "$APP_BUNDLE/Contents/Info.plist" "CFBundleShortVersionString" "1.0.0"
-  set_plist_value "$APP_BUNDLE/Contents/Info.plist" "CFBundleVersion" "1.0.0"
-fi
+cat > "$CONTENTS_DIR/Info.plist" <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleDisplayName</key>
+    <string>Flight Tracker</string>
+    <key>CFBundleExecutable</key>
+    <string>FlightTracker</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.flighttracker.app</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>Flight Tracker</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0.0</string>
+    <key>CFBundleVersion</key>
+    <string>1.0.0</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>12.0</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>NSPrincipalClass</key>
+    <string>NSApplication</string>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+      <key>NSAllowsArbitraryLoads</key>
+      <true/>
+    </dict>
+  </dict>
+</plist>
+PLIST
 
 cp -R "$APP_BUNDLE" "$DMG_STAGING_DIR/"
 ln -s /Applications "$DMG_STAGING_DIR/Applications"
