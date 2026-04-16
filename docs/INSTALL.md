@@ -36,16 +36,28 @@ Use these three commands in the repo root:
 
 If you want the Mac itself to be the receiver host:
 
-1. Install `readsb` on the Mac.
+1. Install Homebrew on the Mac if it is not already installed.
 2. Plug the RTL-SDR USB dongle into that same Mac.
-3. Run `Browser.command`.
-4. Open the local browser dashboard it starts.
+3. Run `Browser.command` or `Chromium.command`.
+4. Let the script auto-install `readsb` on first run if needed.
+5. Open the local browser dashboard or Chromium app window it starts.
 
-The Mac host path expects a local `readsb` binary on `PATH`. `brew install readsb` is the simplest path on current macOS systems.
+The Mac host path uses a local `readsb` binary. `Browser.command` and `Chromium.command` now try to install it automatically with Homebrew on first run. If Homebrew is not installed yet, install it from `https://brew.sh` and rerun the launcher.
 
-If you want the same local Mac host in a standalone Chromium-family app window instead of a normal browser tab, run `Chromium.command`.
+If you want the same local Mac host in a standalone Chromium-family app window instead of a normal browser tab, run `Chromium.command`. That is the supported standalone Chromium path today.
 
 Neither of those Mac paths requires a Windows machine.
+
+## Browser-Only Receiver
+
+If you want the browser itself to read the USB dongle and decode ADS-B without the native Windows or Mac decoder:
+
+1. Open the `Browser-Only Receiver` link from the dashboard, or serve `apps/windows/DashboardHost/wwwroot/chrome-direct.html` from any secure `https://` or `http://localhost` web origin.
+2. Use desktop Chromium or Chrome.
+3. Plug the RTL-SDR USB dongle into that same computer.
+4. Press `Start Browser Receiver` and authorize the dongle when Chromium prompts for USB access.
+
+The browser-only receiver path decodes ADS-B directly in the page with WebUSB. It does not rely on `dump1090.exe` or `readsb`, but it does require a secure browser context and a Chromium-family browser with WebUSB support.
 
 ## Windows Host Notes
 

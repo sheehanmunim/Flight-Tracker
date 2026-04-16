@@ -3,16 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Flight Tracker Chrome Direct Lab</title>
+  <title>Flight Tracker Browser Receiver</title>
   <style>
     :root {
-      --bg: #f3f2ec;
-      --panel: #ffffff;
-      --ink: #111111;
-      --muted: #5d5d5d;
-      --line: #c9c5b8;
-      --accent: #20435c;
-      --warn: #9b4d00;
+      --bg: #edf1e8;
+      --panel: rgba(255, 255, 255, 0.94);
+      --ink: #122018;
+      --muted: #586559;
+      --line: #becab9;
+      --accent: #204f3a;
+      --warn: #8f5a00;
+      --danger: #8a2f2f;
     }
 
     * { box-sizing: border-box; }
@@ -22,59 +23,80 @@
       font-family: "Segoe UI", Arial, sans-serif;
       color: var(--ink);
       background:
-        radial-gradient(circle at top right, rgba(32, 67, 92, 0.10), transparent 32%),
-        linear-gradient(180deg, #f7f5ef 0%, #ece8de 100%);
+        radial-gradient(circle at top left, rgba(32, 79, 58, 0.10), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(162, 83, 20, 0.10), transparent 28%),
+        linear-gradient(180deg, #f5f8f1 0%, #e7ece2 100%);
       min-height: 100vh;
     }
 
     .shell {
-      max-width: 980px;
+      max-width: 1240px;
       margin: 0 auto;
-      padding: 24px 16px 40px;
+      padding: 22px 16px 36px;
       display: grid;
       gap: 16px;
     }
 
+    .hero,
     .panel {
-      background: rgba(255, 255, 255, 0.96);
+      background: var(--panel);
       border: 1px solid var(--line);
-      padding: 18px;
-      box-shadow: 0 12px 28px rgba(17, 17, 17, 0.08);
+      box-shadow: 0 12px 30px rgba(18, 32, 24, 0.08);
     }
 
-    h1, h2, p { margin: 0; }
-
-    .stack {
+    .hero {
+      padding: 22px;
       display: grid;
-      gap: 10px;
+      gap: 14px;
     }
 
-    .muted {
+    .hero h1,
+    .panel h2 {
+      margin: 0;
+    }
+
+    .lede,
+    .muted,
+    .panel p {
+      margin: 0;
       color: var(--muted);
       line-height: 1.5;
     }
 
     .warning {
-      border-left: 4px solid var(--warn);
-      padding-left: 12px;
+      padding: 12px 14px;
+      border: 1px solid #d4bf92;
+      background: #fff7e7;
+      color: #684600;
     }
 
-    .actions {
+    .actions,
+    .config-row {
       display: flex;
-      flex-wrap: wrap;
       gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
     }
 
     button,
-    a.button {
-      min-height: 40px;
-      padding: 8px 14px;
-      border: 1px solid var(--ink);
-      text-decoration: none;
-      color: var(--ink);
-      background: #ffffff;
+    input,
+    a.button-link {
       font: inherit;
+      min-height: 42px;
+      border: 1px solid var(--accent);
+      border-radius: 0;
+    }
+
+    button,
+    a.button-link {
+      padding: 9px 14px;
       cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #ffffff;
+      color: var(--ink);
     }
 
     button.primary {
@@ -82,101 +104,240 @@
       color: #ffffff;
     }
 
-    pre {
-      margin: 0;
-      overflow: auto;
-      padding: 14px;
-      background: #f8f6ef;
+    button.secondary,
+    a.button-link {
+      background: #f5f8f1;
+    }
+
+    button:disabled,
+    input:disabled {
+      opacity: 0.55;
+      cursor: wait;
+    }
+
+    .config-card {
+      display: grid;
+      gap: 6px;
+      min-width: 180px;
+    }
+
+    .config-card label,
+    .stat .label {
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    input[type="number"] {
+      padding: 8px 10px;
+      background: #ffffff;
+      color: var(--ink);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.85fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+    }
+
+    .stat {
       border: 1px solid var(--line);
+      background: #fbfcfa;
+      padding: 12px;
+    }
+
+    .stat .value {
+      margin-top: 6px;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    pre,
+    .activity {
+      margin: 0;
       white-space: pre-wrap;
+      word-break: break-word;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.9rem;
       line-height: 1.45;
+      border: 1px solid var(--line);
+      background: #fbfcfa;
+      padding: 12px;
+    }
+
+    .activity {
+      min-height: 96px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    th {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 4px 8px;
+      background: var(--accent);
+      color: #ffffff;
+      font-size: 12px;
+    }
+
+    .empty {
+      padding: 18px;
+      border: 1px dashed var(--line);
+      background: #fbfcfa;
+      color: var(--muted);
+    }
+
+    .fine-print {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .status-ok { color: var(--accent); }
+    .status-warn { color: var(--warn); }
+    .status-error { color: var(--danger); }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tr {
+        border: 1px solid var(--line);
+        background: #fbfcfa;
+        margin-bottom: 10px;
+      }
+
+      td {
+        border-bottom: 0;
+      }
+
+      td::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 4px;
+      }
     }
   </style>
 </head>
 <body>
   <main class="shell">
-    <section class="panel stack">
-      <h1>Chrome Direct Lab</h1>
-      <p class="muted">This is the experimental browser-only track for direct USB access in Chromium-based browsers. It can request a USB device and inspect basic descriptors, but the full SDR demodulation and ADS-B decode pipeline is not implemented in the browser yet.</p>
-      <p class="muted warning">Use the Mac or Windows host mode for the working receiver path today. Use this page to explore Chrome-only WebUSB access and to stage a future direct-browser receiver workflow.</p>
+    <section class="hero">
+      <h1>Browser Receiver</h1>
+      <p class="lede">This page can talk to an RTL-SDR directly from Chromium over WebUSB, decode ADS-B in the browser, and show live aircraft without using the Windows or macOS host decoder.</p>
+      <p class="warning">Browser-only receiver requirements: desktop Chromium or Chrome, a secure context such as <code>https://</code> or <code>http://localhost</code>, and an RTL2832U-based USB dongle. Safari and Firefox do not expose WebUSB for this workflow.</p>
+
       <div class="actions">
-        <button id="requestUsbBtn" class="primary" type="button">Request USB Device</button>
-        <a id="dashboardLink" class="button" href="/">Open Dashboard</a>
+        <button id="startBtn" class="primary" type="button">Start Browser Receiver</button>
+        <button id="stopBtn" class="secondary" type="button" disabled>Stop Receiver</button>
+        <a id="dashboardLink" class="button-link" href="/">Open Dashboard</a>
+      </div>
+
+      <div class="config-row">
+        <div class="config-card">
+          <label for="ppmInput">PPM Correction</label>
+          <input id="ppmInput" type="number" value="0" step="0.1">
+        </div>
+        <div class="config-card">
+          <label for="sampleRateInput">Sample Rate</label>
+          <input id="sampleRateInput" type="number" value="2000000" step="100000" min="1000000" max="3200000">
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="label">Status</div>
+          <div id="statusValue" class="value">Idle</div>
+        </div>
+        <div class="stat">
+          <div class="label">Tracked Aircraft</div>
+          <div id="aircraftCount" class="value">0</div>
+        </div>
+        <div class="stat">
+          <div class="label">Valid ADS-B Frames</div>
+          <div id="frameCount" class="value">0</div>
+        </div>
+        <div class="stat">
+          <div class="label">Position Fixes</div>
+          <div id="positionCount" class="value">0</div>
+        </div>
+        <div class="stat">
+          <div class="label">Updated</div>
+          <div id="updatedAt" class="value">Waiting</div>
+        </div>
       </div>
     </section>
 
-    <section class="panel stack">
-      <h2>Browser Support</h2>
-      <pre id="supportOutput">Checking browser capabilities...</pre>
-    </section>
+    <section class="grid">
+      <section class="panel">
+        <div>
+          <h2>Live Aircraft</h2>
+          <p>Airborne position, callsign, altitude, and velocity are decoded in-browser from the USB SDR stream. Aircraft without a current position still stay visible so you can confirm the receiver is active.</p>
+        </div>
+        <div id="tableHost" class="empty">Press Start Browser Receiver to authorize the USB dongle and begin decoding.</div>
+      </section>
 
-    <section class="panel stack">
-      <h2>Selected Device</h2>
-      <pre id="deviceOutput">No device selected.</pre>
-    </section>
-
-    <section class="panel stack">
-      <h2>Next Steps</h2>
-      <pre>Planned milestones for this track:
-1. Enumerate compatible RTL-SDR USB devices in Chromium.
-2. Open the USB interface safely from the browser.
-3. Stream IQ data into a worker.
-4. Demodulate ADS-B and decode messages in-browser.
-5. Reuse the dashboard receiver view with a browser-native source.</pre>
+      <aside class="panel">
+        <div>
+          <h2>Runtime</h2>
+          <p class="muted">Support checks, selected device details, and decoder activity are shown here.</p>
+        </div>
+        <pre id="supportOutput">Checking browser capabilities...</pre>
+        <pre id="deviceOutput">No device selected.</pre>
+        <div id="activity" class="activity">Waiting for the browser receiver to start.</div>
+        <div class="fine-print">This page is fully client-side for receiver decoding. Feeders, MLAT, and the host-managed local ports are still separate host-based workflows.</div>
+      </aside>
     </section>
   </main>
 
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const dashboardKey = params.get("key") || window.localStorage.getItem("flight-tracker-dashboard-key") || "";
-    const supportOutput = document.getElementById("supportOutput");
-    const deviceOutput = document.getElementById("deviceOutput");
-    const requestUsbBtn = document.getElementById("requestUsbBtn");
-    const dashboardLink = document.getElementById("dashboardLink");
-
-    if (dashboardKey) {
-      dashboardLink.href = `/?key=${encodeURIComponent(dashboardKey)}`;
-    }
-
-    function describeSupport() {
-      const isSecureContext = window.isSecureContext;
-      const hasUsb = "usb" in navigator;
-      const ua = navigator.userAgent;
-
-      supportOutput.textContent = [
-        `Secure context: ${isSecureContext ? "yes" : "no"}`,
-        `navigator.usb available: ${hasUsb ? "yes" : "no"}`,
-        `User agent: ${ua}`,
-        "",
-        hasUsb
-          ? "WebUSB appears to be available in this browser session."
-          : "WebUSB is not available here. Try a Chromium-based browser on localhost or HTTPS."
-      ].join("\n");
-    }
-
-    requestUsbBtn.addEventListener("click", async () => {
-      if (!("usb" in navigator)) {
-        deviceOutput.textContent = "WebUSB is not available in this browser.";
-        return;
-      }
-
-      try {
-        const device = await navigator.usb.requestDevice({ filters: [] });
-        deviceOutput.textContent = [
-          `Product: ${device.productName || "Unknown"}`,
-          `Manufacturer: ${device.manufacturerName || "Unknown"}`,
-          `Vendor ID: 0x${device.vendorId.toString(16).padStart(4, "0")}`,
-          `Product ID: 0x${device.productId.toString(16).padStart(4, "0")}`,
-          `Serial: ${device.serialNumber || "Unavailable"}`,
-          "",
-          "A device was selected successfully. Direct SDR capture and decode in the browser is the next implementation step."
-        ].join("\n");
-      } catch (error) {
-        deviceOutput.textContent = error && error.message ? error.message : "USB device selection was cancelled or failed.";
-      }
-    });
-
-    describeSupport();
-  </script>
+  <script type="module" src="./chrome-direct.js"></script>
 </body>
 </html>

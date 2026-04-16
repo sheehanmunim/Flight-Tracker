@@ -8,6 +8,7 @@ LOG_FILE="$LOG_DIR/readsb.log"
 DATA_DIR="$LOG_DIR/readsb-data"
 CONFIG_FILE="$ROOT/dump1090-local.cfg"
 NO_BROWSER=0
+BREW_BIN=""
 
 for arg in "$@"; do
   if [[ "$arg" == "-NoBrowser" || "$arg" == "--no-browser" ]]; then
@@ -16,6 +17,77 @@ for arg in "$@"; do
 done
 
 mkdir -p "$LOG_DIR" "$DATA_DIR"
+
+ensure_brew_on_path() {
+  if command -v brew >/dev/null 2>&1; then
+    BREW_BIN="$(command -v brew)"
+    return 0
+  fi
+
+  for prefix in /opt/homebrew/bin /usr/local/bin; do
+    if [[ -x "$prefix/brew" ]]; then
+      export PATH="$prefix:$PATH"
+      BREW_BIN="$prefix/brew"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+refresh_shell_from_brew() {
+  if ensure_brew_on_path; then
+    eval "$("$BREW_BIN" shellenv)" >/dev/null 2>&1 || true
+  fi
+}
+
+ensure_readsb() {
+  if command -v readsb >/dev/null 2>&1; then
+    return 0
+  fi
+
+  refresh_shell_from_brew
+  if command -v readsb >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if ! ensure_brew_on_path; then
+    echo "readsb was not found on PATH."
+    echo
+    echo "Install Homebrew from https://brew.sh, then run Browser.command or Chromium.command again."
+    exit 1
+  fi
+
+  echo "readsb was not found on PATH."
+  echo "Installing readsb with Homebrew for the local Mac host..."
+
+  if ! "$BREW_BIN" install readsb; then
+    echo
+    echo "Homebrew could not install readsb automatically."
+    echo "Try running: brew install readsb"
+    exit 1
+  fi
+
+  refresh_shell_from_brew
+
+  if ! command -v readsb >/dev/null 2>&1; then
+    for prefix in /opt/homebrew/bin /usr/local/bin; do
+      if [[ -x "$prefix/readsb" ]]; then
+        export PATH="$prefix:$PATH"
+        break
+      fi
+    done
+  fi
+
+  if ! command -v readsb >/dev/null 2>&1; then
+    echo
+    echo "readsb installed, but it was not visible on PATH in this shell."
+    echo "Open a new terminal and run Browser.command or Chromium.command again."
+    exit 1
+  fi
+
+  echo "readsb is installed and ready."
+}
 
 port_listener_pid() {
   lsof -tiTCP:"$1" -sTCP:LISTEN 2>/dev/null | head -n 1 || true
@@ -27,12 +99,7 @@ recent_log_tail() {
   fi
 }
 
-if ! command -v readsb >/dev/null 2>&1; then
-  echo "readsb was not found on PATH."
-  echo
-  echo "On macOS, install it with: brew install readsb"
-  exit 1
-fi
+ensure_readsb
 
 if [[ -f "$PID_FILE" ]]; then
   EXISTING_PID="$(tr -d '[:space:]' < "$PID_FILE")"

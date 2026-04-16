@@ -326,12 +326,12 @@ internal static class HostPlatform
     {
         if (OperatingSystem.IsMacOS())
         {
-            return "The RTL-SDR can stay attached to this Mac host. Install a local decoder such as readsb on the Mac when you want the browser dashboard to control it directly.";
+            return "The RTL-SDR can stay attached to this Mac host. Browser.command or Chromium.command can bootstrap the local readsb decoder on macOS when Homebrew is available, or you can use the Browser-Only Receiver page in Chromium for direct WebUSB decoding.";
         }
 
         if (OperatingSystem.IsWindows())
         {
-            return "The browser dashboard can control the local host directly. Keep the RTL-SDR attached to the same machine that is running the decoder.";
+            return "The browser dashboard can control the local host directly. Keep the RTL-SDR attached to the same machine that is running the decoder, or open the Browser-Only Receiver page in Chromium for direct WebUSB decoding.";
         }
 
         return "Host-specific USB control is not available on this platform yet.";

@@ -446,7 +446,10 @@
             <h2>Receiver View</h2>
             <p>This shows the live receiver output from the local host. On macOS it uses the built-in browser receiver page when no standalone map server is available.</p>
           </div>
-          <a id="mapLink" class="link-button" href="#" target="_blank" rel="noreferrer">Open In New Tab</a>
+          <div class="control-row">
+            <a id="mapLink" class="link-button" href="#" target="_blank" rel="noreferrer">Open In New Tab</a>
+            <a id="browserDirectLink" class="link-button" href="/chrome-direct.html" target="_blank" rel="noreferrer">Browser-Only Receiver</a>
+          </div>
         </div>
 
         <div class="status-strip">
@@ -498,6 +501,7 @@
     const keyInput = document.getElementById("keyInput");
     const saveKeyBtn = document.getElementById("saveKeyBtn");
     const mapLink = document.getElementById("mapLink");
+    const browserDirectLink = document.getElementById("browserDirectLink");
     const mapFrame = document.getElementById("mapFrame");
     const usbNote = document.getElementById("usbNote");
     const trackerStatus = document.getElementById("trackerStatus");
@@ -569,11 +573,13 @@
         metaState = meta;
         usbNote.textContent = meta.usbNote || "Host details unavailable.";
         mapLink.href = meta.mapUrl || fallbackMapUrl;
+        browserDirectLink.href = meta.chromeDirectUrl || "/chrome-direct.html";
         mapFrame.src = meta.mapUrl || fallbackMapUrl;
       } catch (error) {
         metaState = { lanUrl: "", mapUrl: fallbackMapUrl, chromeDirectUrl: "", usbNote: "", hostKind: "" };
         usbNote.textContent = "Save the access key if the receiver details do not load.";
         mapLink.href = fallbackMapUrl;
+        browserDirectLink.href = "/chrome-direct.html";
         mapFrame.src = fallbackMapUrl;
         throw error;
       }

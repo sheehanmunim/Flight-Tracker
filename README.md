@@ -13,8 +13,9 @@ There are also standalone Mac browser and Chromium app paths now:
 - `Browser.command` starts the browser dashboard on a Mac and drives a local `readsb` decoder on that same Mac
 - `Chromium.command` starts the local Mac host and opens the dashboard in a standalone Chromium-family app window
 - `Chrome-Direct.command` is kept as a compatibility alias that forwards to `Chromium.command`
+- `chrome-direct.html` is the browser-only receiver page that talks to the RTL-SDR directly from Chromium over WebUSB and decodes ADS-B in the browser
 
-Those two Mac paths are standalone and do not require a Windows host.
+Those two Mac paths are standalone and do not require a Windows host. On first run they can auto-install `readsb` through Homebrew when Homebrew is already installed on the Mac.
 
 ## Quick Start
 
@@ -34,7 +35,7 @@ Those are the only top-level commands most users need.
 There is one real receiver/decoder host:
 
 - on `Windows`, the host runs `dump1090.exe`
-- on `macOS`, the local browser-host path expects `readsb` on `PATH`
+- on `macOS`, the local browser-host path uses `readsb` and will auto-install it through Homebrew on first run when Homebrew is available
 - the host serves the local aircraft view and exposes local feed outputs for feeder software
 
 The three frontends are just different ways to control the same host:
@@ -48,7 +49,15 @@ The Mac app does not decode ADS-B by itself. It controls a shared host over the 
 The new Mac browser-host path is different from the remote Mac app:
 
 - the `Mac app` is still a remote client for a shared host
-- `Browser.command` makes the Mac itself the local host when `readsb` is installed and the RTL-SDR is plugged into that Mac
+- `Browser.command` makes the Mac itself the local host and can bootstrap `readsb` automatically when Homebrew is present and the RTL-SDR is plugged into that Mac
+
+Important Chromium note:
+
+- `Chromium.command` is the supported standalone Chromium path on Mac
+- it still uses the same local Mac host plus local decoder on that Mac
+- `chrome-direct.html` is now the direct browser-only receiver path
+- the browser-only receiver does not use `dump1090.exe` or `readsb`
+- it requires desktop Chromium/Chrome, a secure context such as `https://` or `http://localhost`, and an RTL2832U-compatible USB dongle
 
 ## Downloads
 
@@ -148,5 +157,7 @@ Releases are published by pushing a tag like `v1.0.0`.
 
 - The RTL-SDR dongle must stay attached to whichever machine is running the local decoder.
 - The browser dashboard, Windows app, and Mac app are all control surfaces for the same local or shared host.
+- The browser-only receiver page can decode directly from the USB dongle in Chromium without the native Windows or Mac decoder, but it still needs WebUSB support and a secure browser context.
+- On macOS, `Browser.command` and `Chromium.command` will try to install `readsb` automatically with Homebrew if it is missing.
 - A fresh Windows machine may still need the RTL-SDR driver installed.
 - `logs/` is only local runtime state such as `dump1090.log`, feeder status files, and the dashboard key.
