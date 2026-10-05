@@ -7,3 +7,6 @@ macOS/flight-tracker-url.txt
 .build/
 FlightTracker-Setup.exe
 FlightTracker.dmg
+# Receiver home position stays local (see README).
+dump1090-home.cfg
+dump1090-runtime.cfg

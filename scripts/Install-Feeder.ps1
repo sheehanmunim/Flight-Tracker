@@ -167,16 +167,29 @@ function Ensure-TrackerRunning {
 }
 
 function Get-HomePosition {
-    $configPath = Join-Path (Get-RepoRoot) "dump1090-local.cfg"
-    if (-not (Test-Path -LiteralPath $configPath)) {
-        return $null
+    # Lookup order: FLIGHT_TRACKER_HOMEPOS env var ("<lat>,<lon>"), then the
+    # untracked dump1090-home.cfg, then a homepos line in dump1090-local.cfg.
+    $pattern = '^\s*(-?[0-9]+(?:\.[0-9]+)?)\s*,\s*(-?[0-9]+(?:\.[0-9]+)?)\s*$'
+
+    if ($env:FLIGHT_TRACKER_HOMEPOS -and $env:FLIGHT_TRACKER_HOMEPOS -match $pattern) {
+        return [pscustomobject]@{
+            Latitude = $matches[1]
+            Longitude = $matches[2]
+        }
     }
 
-    foreach ($line in Get-Content -LiteralPath $configPath) {
-        if ($line -match '^\s*homepos\s*=\s*([-0-9.]+)\s*,\s*([-0-9.]+)\s*$') {
-            return [pscustomobject]@{
-                Latitude = $matches[1]
-                Longitude = $matches[2]
+    foreach ($fileName in @("dump1090-home.cfg", "dump1090-local.cfg")) {
+        $configPath = Join-Path (Get-RepoRoot) $fileName
+        if (-not (Test-Path -LiteralPath $configPath)) {
+            continue
+        }
+
+        foreach ($line in Get-Content -LiteralPath $configPath) {
+            if ($line -match '^\s*homepos\s*=\s*(.+)$' -and $matches[1] -match $pattern) {
+                return [pscustomobject]@{
+                    Latitude = $matches[1]
+                    Longitude = $matches[2]
+                }
             }
         }
     }
@@ -488,7 +501,7 @@ echo A real FR24 sharing key is still required before the feeder can start.
 
         "airplanes-live" {
             if (-not $homePosition) {
-                throw "No receiver home position was found in dump1090-local.cfg, so the airplanes.live MLAT install cannot be completed automatically yet."
+                throw "No receiver home position is set. Set FLIGHT_TRACKER_HOMEPOS='<lat>,<lon>' (or add homepos to an untracked dump1090-home.cfg), then run the airplanes.live MLAT install again."
             }
 
             Write-Host "Installing airplanes.live feeder in Debian..." -ForegroundColor Cyan

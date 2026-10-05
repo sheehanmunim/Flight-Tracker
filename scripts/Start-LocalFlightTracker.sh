@@ -134,11 +134,24 @@ READSB_ARGS=(
   "--quiet"
 )
 
-if [[ -f "$CONFIG_FILE" ]]; then
-  HOMEPOS_LINE="$(grep -E '^[[:space:]]*homepos[[:space:]]*=' "$CONFIG_FILE" | head -n 1 || true)"
-  if [[ "$HOMEPOS_LINE" =~ homepos[[:space:]]*=[[:space:]]*([-0-9.]+)[[:space:]]*,[[:space:]]*([-0-9.]+) ]]; then
-    READSB_ARGS+=("--lat" "${BASH_REMATCH[1]}" "--lon" "${BASH_REMATCH[2]}")
-  fi
+# Receiver home position: FLIGHT_TRACKER_HOMEPOS="<lat>,<lon>" env var, then the
+# untracked dump1090-home.cfg, then a homepos line in dump1090-local.cfg (legacy).
+HOMEPOS_VALUE="${FLIGHT_TRACKER_HOMEPOS:-}"
+if [[ -z "$HOMEPOS_VALUE" ]]; then
+  for candidate in "$ROOT/dump1090-home.cfg" "$CONFIG_FILE"; do
+    if [[ -f "$candidate" ]]; then
+      HOMEPOS_LINE="$(grep -E '^[[:space:]]*homepos[[:space:]]*=' "$candidate" | head -n 1 || true)"
+      if [[ -n "$HOMEPOS_LINE" ]]; then
+        HOMEPOS_VALUE="${HOMEPOS_LINE#*=}"
+        break
+      fi
+    fi
+  done
+fi
+if [[ "$HOMEPOS_VALUE" =~ ^[[:space:]]*(-?[0-9]+(\.[0-9]+)?)[[:space:]]*,[[:space:]]*(-?[0-9]+(\.[0-9]+)?)[[:space:]]*$ ]]; then
+  READSB_ARGS+=("--lat" "${BASH_REMATCH[1]}" "--lon" "${BASH_REMATCH[3]}")
+elif [[ -n "$HOMEPOS_VALUE" ]]; then
+  echo "Ignoring receiver home position '$HOMEPOS_VALUE': expected '<lat>,<lon>'."
 fi
 
 nohup readsb "${READSB_ARGS[@]}" >>"$LOG_FILE" 2>&1 &
