@@ -85,6 +85,21 @@ Platform note:
 - on `Windows`, `http://127.0.0.1:8080` is the local map/web UI from `dump1090`
 - on `macOS`, the local receiver view is served through the dashboard on `5099`
 
+## Receiver home position
+
+The receiver's latitude/longitude is not stored in the repo. Distance rings, local position decoding and MLAT feeders use it when you provide it; without it the tracker still runs with no fixed receiver position.
+
+Set it on the machine that runs the decoder, in this order of precedence:
+
+1. `FLIGHT_TRACKER_HOMEPOS` environment variable, formatted `<lat>,<lon>` in decimal degrees, for example:
+   - Windows (persists for new sessions): `setx FLIGHT_TRACKER_HOMEPOS "51.4700,-0.4543"`
+   - macOS/Linux: `export FLIGHT_TRACKER_HOMEPOS="51.4700,-0.4543"`
+2. An untracked `dump1090-home.cfg` in the repo root containing one line: `homepos = 51.4700,-0.4543` (this file is gitignored)
+
+On Windows `scripts/Start-LocalFlightTracker.ps1` writes a gitignored `dump1090-runtime.cfg` (the committed `dump1090-local.cfg` plus your `homepos`) and launches `dump1090.exe` with it. On macOS `scripts/Start-LocalFlightTracker.sh` passes `--lat`/`--lon` to `readsb`. The official airplanes.live MLAT install (`scripts/Install-Feeder.ps1`) needs this value and stops with a message if it is missing.
+
+Do not commit a real `homepos` to `dump1090-local.cfg`.
+
 ## MLAT
 
 The important current state:

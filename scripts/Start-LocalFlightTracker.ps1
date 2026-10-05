@@ -174,6 +174,38 @@ function Ensure-PortAvailable {
     throw "Port $Port is already being used by process $($blockingProcess.Name) (PID $($blockingProcess.ProcessId)). Stop that app first, then try again."
 }
 
+function Get-ReceiverHomePosition {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Root
+    )
+
+    # Lookup order: FLIGHT_TRACKER_HOMEPOS env var, then the untracked
+    # dump1090-home.cfg, then a homepos line in dump1090-local.cfg (legacy).
+    $pattern = '^\s*(-?[0-9]+(?:\.[0-9]+)?)\s*,\s*(-?[0-9]+(?:\.[0-9]+)?)\s*$'
+
+    if ($env:FLIGHT_TRACKER_HOMEPOS) {
+        if ($env:FLIGHT_TRACKER_HOMEPOS -match $pattern) {
+            return [pscustomobject]@{ Latitude = $matches[1]; Longitude = $matches[2] }
+        }
+        Write-Host "Ignoring FLIGHT_TRACKER_HOMEPOS: expected '<lat>,<lon>'." -ForegroundColor Yellow
+    }
+
+    foreach ($fileName in @("dump1090-home.cfg", "dump1090-local.cfg")) {
+        $path = Join-Path $Root $fileName
+        if (-not (Test-Path -LiteralPath $path)) {
+            continue
+        }
+        foreach ($line in Get-Content -LiteralPath $path) {
+            if ($line -match '^\s*homepos\s*=\s*(.+)$' -and $matches[1] -match $pattern) {
+                return [pscustomobject]@{ Latitude = $matches[1]; Longitude = $matches[2] }
+            }
+        }
+    }
+
+    return $null
+}
+
 $paths = Get-TrackerPaths
 
 foreach ($requiredPath in @($paths.Dump1090, $paths.Config, $paths.RtlTest)) {
@@ -223,7 +255,17 @@ if (-not $existingTracker) {
         throw "$($sdrStatus.Message)`n`n$($sdrStatus.Details)"
     }
 
-    $launchCommand = '/c cd /d "{0}" && dump1090.exe --config "{1}" --net' -f $paths.VendorRoot, $paths.Config
+    $launchConfig = $paths.Config
+    $homePosition = Get-ReceiverHomePosition -Root $paths.Root
+    $hasHomeposInConfig = [bool](Select-String -LiteralPath $paths.Config -Pattern '^\s*homepos\s*=' -Quiet)
+    if ($homePosition -and -not $hasHomeposInConfig) {
+        # Untracked runtime copy in the repo root so %~dp0 paths still resolve.
+        $launchConfig = Join-Path $paths.Root "dump1090-runtime.cfg"
+        $runtimeLines = @(Get-Content -LiteralPath $paths.Config) + @("homepos = $($homePosition.Latitude),$($homePosition.Longitude)")
+        Set-Content -LiteralPath $launchConfig -Value $runtimeLines -Encoding ASCII
+    }
+
+    $launchCommand = '/c cd /d "{0}" && dump1090.exe --config "{1}" --net' -f $paths.VendorRoot, $launchConfig
 
     Start-Process -FilePath "cmd.exe" `
         -ArgumentList $launchCommand `
